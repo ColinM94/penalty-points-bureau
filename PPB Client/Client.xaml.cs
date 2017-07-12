@@ -15,12 +15,12 @@ using System.Windows.Shapes;
 
 namespace PPB_Client
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
-    public partial class MainWindow : Window
+    public partial class Client : Window
     {
-        public MainWindow()
+        public string Server = "localhost";
+        public int Port = 2000;
+
+        public Client()
         {
             InitializeComponent();
         }
