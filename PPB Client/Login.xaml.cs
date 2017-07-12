@@ -136,8 +136,8 @@ namespace PPB_Client
                     reader.Close();
 
                     //Logs in user and opens main window
-                    MainWindow main = new MainWindow();
-                    main.Show();
+                    Client client = new Client();
+                    client.Show();
                     this.Close();
                 }
 
