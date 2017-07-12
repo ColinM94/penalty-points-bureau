@@ -83,7 +83,6 @@ namespace PPB_Client
                 loginPassword.Password = "password";
                 //END TEMP CODE
 
-
                 MySqlConnection conn;
                 MySqlCommand cmd;
                 MySqlDataReader reader = null;
