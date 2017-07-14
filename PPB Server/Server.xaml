@@ -5,8 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PPB_Server"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
-    <Border Padding="10">
+        Title="PPB Server" Height="300" Width="400">
+    <Border Padding="20">
         <StackPanel>
             <!-- Buttons -->
             <Grid Height="50">
@@ -15,9 +15,18 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <Button Click="StartServer_Click" Margin="0 0 10 0" Grid.Column="0" Content="Start Server" />
-                <Button Click="StopServer_Click" Margin="10 0 0 0" Grid.Column="1" Content="Stop Server" />
+                <Button Name="StartServerBtn" Click="StartServer_Click" Margin="0 0 10 0" Grid.Column="0" Content="Start Server" />
+                <Button Name="StopServerBtn" Click="StopServer_Click" Margin="10 0 0 0" Grid.Column="1" Content="Stop Server" IsEnabled="false"/>
             </Grid>
+
+            <StackPanel Margin="0 20 0 0" HorizontalAlignment="center">
+                <!--<Label Margin="0 20 0 0" Name="ServerStatusLabel" HorizontalContentAlignment="Center" Content="Server Status" FontSize="20"/> -->
+
+                <Label Name="ServerStatusLabel" Content="Server Offline" Margin="0 0 0 0" HorizontalContentAlignment="center" FontSize="15" Foreground="Red"/>
+                <Separator Width="175"/>
+                <Label Name="ServerIPLabel" Content="IP Address:" Margin="0 0 0 0" FontSize="15"/>
+                <Label Name="ServerPortLabel" Content="Port:" Margin="0 0 0 0"  FontSize="15"/>
+            </StackPanel>
         </StackPanel>
     </Border>
 </Window>

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -17,12 +18,18 @@ namespace PPB_Client
 {
     public partial class Client : Window
     {
-        public string Server = "localhost";
-        public int Port = 2000;
+        TcpClient tcpclnt = new TcpClient();
+        string server = "localhost";
+        int port = 2000;
 
         public Client()
         {
             InitializeComponent();
+
+            tcpclnt.Connect(server, port);
+
+            
+
         }
     }
 }
