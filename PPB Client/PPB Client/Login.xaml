@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PPB_Client"
         mc:Ignorable="d"
-        Title="System Login" Height="200" Width="270" ResizeMode="NoResize">
+        Title="PPB Login" Height="200" Width="270" ResizeMode="NoResize">
     <Border>
         <StackPanel Height="170" VerticalAlignment="Top">
             <TextBox x:Name="loginUsername" Margin="15 15 15 0" Padding="5" FontSize="16" Background="White" Text="Username" BorderBrush="#FF3498DB" Foreground="#FF939393" GotFocus="loginUsername_GotFocus" LostFocus="loginUsername_LostFocus"/>
