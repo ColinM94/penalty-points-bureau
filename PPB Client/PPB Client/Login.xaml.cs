@@ -76,6 +76,10 @@ namespace PPB_Client
 
         private void loginPassword_Click(object sender, RoutedEventArgs e)
         {
+            Client client = new Client();
+            client.Show();
+            this.Close();
+
             try
             {
                 //TEMP CODE
@@ -135,9 +139,9 @@ namespace PPB_Client
                     reader.Close();
 
                     //Logs in user and opens main window
-                    Client client = new Client();
-                    client.Show();
-                    this.Close();
+                    //Client client = new Client();
+                    //client.Show();
+                    //this.Close();
                 }
 
                 else
@@ -148,15 +152,12 @@ namespace PPB_Client
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Connection Failed");
+                //MessageBox.Show("Connection Failed");
                 
-                //Uncomment for mysql error messages
-                /* 
-                if (ex is MySqlException)
-                {
-                    MessageBox.Show(ex.Message);
-                }
-                */
+                //Uncomment for mysql error messages            
+                MessageBox.Show(ex.Message);
+               
+               
             }
         }
     }
