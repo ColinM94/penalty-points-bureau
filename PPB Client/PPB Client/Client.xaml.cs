@@ -27,6 +27,7 @@ namespace PPB_Client
             try
             {
                 connection = new TcpClient(serverIP.ToString(), port);             
+
                 connected = true;
                 ConnectionStatus();
 
@@ -38,17 +39,20 @@ namespace PPB_Client
                 receiveMsgThread.Start();
 
                 ConnectionStatus();
+
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Error connecting to PPB Server!");
+                MessageBox.Show(ex.ToString());
+
                 connected = false;
                 ConnectionStatus();
             }
         }
 
         private void SendMsg(String msg)
-        {
+        {         
             try
             {
                 stream = connection.GetStream();
@@ -56,11 +60,14 @@ namespace PPB_Client
                 Byte[] data = System.Text.Encoding.ASCII.GetBytes(msg);
 
                 stream.Write(data, 0, data.Length);
+
+                //Prevents too many messages getting sent to server
+                
             }
             catch (Exception ex)
             {
                 connected = false;
-                ConnectionStatus();              
+                //ConnectionStatus();              
             }
         }
 
@@ -83,11 +90,6 @@ namespace PPB_Client
                             Msg.AppendFormat("{0}", Encoding.ASCII.GetString(readBuffer, 0, numBytes));
                         }
                         while (stream.DataAvailable);
-
-                        if(Msg.ToString().Equals("Ping"))
-                        {
-                            SendMsg("Pong");
-                        }
                     }
                 }
             }
@@ -100,6 +102,7 @@ namespace PPB_Client
         private void Disconnect()
         {
             connection.Close();
+            stream.Close();
             connected = false;
             ConnectionStatus();
         }
