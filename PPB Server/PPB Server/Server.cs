@@ -23,8 +23,8 @@ namespace PPB_Server
     {
         IPAddress ip = IPAddress.Parse("127.0.0.1");
         int port = 2000;
-        static bool running = false;
         TcpListener server;
+        static bool running = false;
 
         public void menu()
         {
@@ -75,7 +75,7 @@ namespace PPB_Server
 
             //Thread waits for a client to connect
             Thread listenThread = new Thread(delegate ()
-            {               
+            {       
                 while (running == true)
                 {
                     TcpClient newClient = server.AcceptTcpClient();
@@ -89,10 +89,9 @@ namespace PPB_Server
                     clientThread.IsBackground = true;
                     clientThread.Start();
                 }
-                server.Stop();
             });
             listenThread.IsBackground = true;
-            listenThread.Start();        
+            listenThread.Start();  
         }
 
         //Deals with a single client
@@ -106,7 +105,7 @@ namespace PPB_Server
 
             try
             {
-                while(true)
+                while(running == true)
                 {
                     MsgClient("testconn", client, stream);
 
@@ -141,6 +140,7 @@ namespace PPB_Server
 
         private void StopServer()
         {
+            server.Stop();
             running = false;
 
             Console.WriteLine("Server Stopped");
