@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -22,17 +23,17 @@ namespace PPB_Server
     {
         IPAddress ip = IPAddress.Parse("127.0.0.1");
         int port = 2000;
-        volatile bool running = false;
+        TcpListener server;
+        static bool running = false;
 
         public void menu()
         {
-            //StartServer();
+            StartServer();
 
             bool exit = false;
 
             while (exit == false)
             {
-                Console.Write("Server CMD: ");
                 String option = Console.ReadLine().ToUpper();
                 
                 switch (option)
@@ -60,107 +61,86 @@ namespace PPB_Server
             }          
         }
 
-        //Listen to incoming connections.
+        //Listens for incoming connections
         private void StartServer()
         {
             running = true;
 
-            TcpListener server = new TcpListener(ip, port);
-
+            //Instiates and starts Listener server
+            server = new TcpListener(ip, port);
             server.Start();
 
             Console.WriteLine("Server Started on Port " + port + " with IP " + ip);
             Console.WriteLine("Awaiting Connections....");
 
+            //Thread waits for a client to connect
             Thread listenThread = new Thread(delegate ()
-            {               
+            {       
                 while (running == true)
                 {
                     TcpClient newClient = server.AcceptTcpClient();
 
+                    //Connected client is handed off to an instance of clientThread to free up listenThread
                     Thread clientThread = new Thread(delegate ()
                     {               
                         HandleClient(newClient);
+                        newClient.Close();
                     });
                     clientThread.IsBackground = true;
                     clientThread.Start();
                 }
-                server.Stop();
             });
             listenThread.IsBackground = true;
-            listenThread.Start();        
+            listenThread.Start();  
         }
 
+        //Deals with a single client
         private void HandleClient(object newClient)
         {
             TcpClient client = (TcpClient)newClient;
             NetworkStream stream = client.GetStream();
 
             String clientPort = ((IPEndPoint)client.Client.RemoteEndPoint).Port.ToString();
-            Console.WriteLine(clientPort + ": Client Connected");
-                    
+            Console.WriteLine("Client Connected on port " + clientPort);
+
             try
             {
-                while (PingClient(client, stream))
-                { 
-                    if (stream.CanRead)
+                while(running == true)
+                {
+                    MsgClient("testconn", client, stream);
+
+                    byte[] msgBytes = new byte[1024];
+                    StringBuilder msg = new StringBuilder();
+                    int numBytes = 0;
+
+                    do
                     {
-                        byte[] readBuffer = new byte[1024];
-                        StringBuilder Msg = new StringBuilder();
-                        int numBytes = 0;
-
-                        do
-                        {
-                            numBytes = stream.Read(readBuffer, 0, readBuffer.Length);
-                            Msg.AppendFormat("{0}", Encoding.ASCII.GetString(readBuffer, 0, numBytes));
-                        }
-                        while (stream.DataAvailable);
-
-                        Console.WriteLine(clientPort + ": " + Msg.ToString());
+                        numBytes = stream.Read(msgBytes, 0, msgBytes.Length);
+                        msg.AppendFormat("{0}", Encoding.ASCII.GetString(msgBytes, 0, numBytes));
                     }
+                    while (stream.DataAvailable);
+
+                    Console.WriteLine(msg + " " + clientPort);                 
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine(clientPort + ": Client Disconnected"); 
+                Console.WriteLine("Client Disconnected");       
             }
 
-            stream.Close();
             client.Close();
         }
 
-        private bool PingClient(TcpClient client, NetworkStream stream)
+        private void MsgClient(string msg, TcpClient client, NetworkStream stream)
         {
             Byte[] data = System.Text.Encoding.ASCII.GetBytes("Ping");
 
-            stream.Write(data, 0, data.Length);
-
-            if (stream != null)
-            {
-                int i;
-                Byte[] bytes = new Byte[256];
-                String response = null;
-
-                // Loop to receive all the data sent by the client.
-                while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
-                {
-                    // Translate data bytes to a ASCII string.
-                    response = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
-                    Console.WriteLine(response);
-
-                    if (response.ToString().Equals("Pong"))
-                    {
-                        Console.WriteLine("Pong");
-                        return true;
-                    }
-                }
-            }
-
-            return false;
+            stream.Write(data, 0, data.Length);    
         }
 
         private void StopServer()
         {
+            server.Stop();
             running = false;
 
             Console.WriteLine("Server Stopped");
