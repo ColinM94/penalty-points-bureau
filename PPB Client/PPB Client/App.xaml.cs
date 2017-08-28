@@ -13,6 +13,5 @@ namespace PPB_Client
     /// </summary>
     public partial class App : Application
     {
-
     }
 }

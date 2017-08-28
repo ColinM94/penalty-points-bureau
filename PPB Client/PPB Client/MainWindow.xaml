@@ -7,16 +7,19 @@
         xmlns:viewmodels="clr-namespace:PPB_Client.ViewModels"
         xmlns:views="clr-namespace:PPB_Client.Views"
         mc:Ignorable="d"
-        Title="Penalty Points Bureau" Height="500" Width="800" WindowStartupLocation="CenterScreen" MinWidth="800" MinHeight="500" Icon="Resources\icon.png">
+        Height="350" Width="525" WindowStartupLocation="CenterScreen">
+
+    <Border Margin="10">
+        <ContentControl Name="ActiveItem" />
+    </Border>
+    <!--
     <Window.Resources>
-        <DataTemplate x:Name="loginViewTemplate" DataType="{x:Type viewmodels:LoginViewModel}">
-            <views:LoginView DataContext="{Binding}"/>
-        </DataTemplate>
-        <DataTemplate x:Name="mainViewTemplate" DataType="{x:Type viewmodels:HomeViewModel}">
-            <views:MainView DataContext="{Binding}"/>
+        <DataTemplate DataType="{x:Type viewmodels:LoginViewModel}">
+            <views:LoginView />
         </DataTemplate>
     </Window.Resources>
     <Border Padding="20">
-        <ContentControl Content="{Binding}"/>
+        <ContentPresenter Content="{Binding}"/>
     </Border>
+    -->
 </Window>

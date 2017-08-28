@@ -1,41 +1,50 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using PPB_Client.Helpers;
+using PPB_Client.ViewModels;
+using System;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using System.Security;
 
 namespace PPB_Client.Views
 {
-    public partial class LoginView : UserControl
+    /// <summary>
+    /// Interaction logic for LoginView.xaml
+    /// </summary>
+    public partial class LoginView : UserControl, IPassword
     {
+        /// <summary>
+        /// Login constructor
+        /// </summary>
         public LoginView()
         {
             InitializeComponent();
+            DataContext = new LoginViewModel();
+
+            UsernameTxtBox.Text = "Username";
+            PasswordBox.Password = "**********";
         }
 
-        private void Login()
+        /// <summary>
+        /// Implemenation of IPassword, which allows the entered password to be passed securely to the ViewModel.
+        /// </summary>
+        public SecureString Password
         {
-            string username = usernameTxtBox.Text;
-            string password = passwordTxtBox.Password.ToString();
-
-            MessageBox.Show(username + " " + password);
+            get
+            {
+                return PasswordBox.SecurePassword;
+            }
         }
 
-        //Removes username placeholder text if field is clicked
+        /// <summary>
+        /// Removes username placeholder text if field is clicked.
+        /// </summary>
+        /// <param name="sender">UsernameTxtBox control</param>
         private void UsernameTxtBox_GotFocus(object sender, RoutedEventArgs e)
         {
             TextBox txtBox = sender as TextBox;
 
-            //Gets colour of username text
+            // Gets colour of username text.
             String colour = txtBox.Foreground.ToString();
             String black = Brushes.Black.ToString();
 
@@ -46,7 +55,10 @@ namespace PPB_Client.Views
             }
         }
 
-        //Resets username placeholder text if username field is empty
+        /// <summary>
+        /// Resets username placeholder text if username field is empty.
+        /// </summary>
+        /// <param name="sender">UsernameTxtBox control</param>
         private void UsernameTxtBox_LostFocus(object sender, RoutedEventArgs e)
         {
             TextBox txtBox = sender as TextBox;
@@ -58,16 +70,19 @@ namespace PPB_Client.Views
             }
         }
 
-        //Removes password placeholder text if field is clicked
-        private void PasswordTxtBox_GotFocus(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// Removes password placeholder text if field is clicked.
+        /// </summary>
+        /// <param name="sender">PasswordBox control</param>
+        private void PasswordBox_GotFocus(object sender, RoutedEventArgs e)
         {
             PasswordBox passBox = sender as PasswordBox;
 
-            //Gets colour of password text
+            // Gets colour of password text.
             String colour = passBox.Foreground.ToString();
             String black = Brushes.Black.ToString();
 
-            //Resets Placeholder text if password field is empty
+            // Resets Placeholder text if password field is empty.
             if (colour != black)
             {
                 passBox.Foreground = Brushes.Black;
@@ -75,8 +90,11 @@ namespace PPB_Client.Views
             }
         }
 
-        //Resets password placeholder text if username field is empty
-        private void PasswordTxtBox_LostFocus(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// Resets password placeholder text if username field is empty.
+        /// </summary>
+        /// <param name="sender">PasswordBox control</param>
+        private void PasswordBox_LostFocus(object sender, RoutedEventArgs e)
         {
             PasswordBox passBox = sender as PasswordBox;
 
@@ -85,11 +103,6 @@ namespace PPB_Client.Views
                 passBox.Foreground = Brushes.Gray;
                 passBox.Password = "**********";
             }
-        }
-
-        private void LoginBtn_Click(object sender, RoutedEventArgs e)
-        {
-            Login();
         }
     }
 }

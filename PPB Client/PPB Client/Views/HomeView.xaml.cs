@@ -16,11 +16,11 @@ using System.Windows.Shapes;
 namespace PPB_Client.Views
 {
     /// <summary>
-    /// Interaction logic for MainView.xaml
+    /// Interaction logic for HomeView.xaml
     /// </summary>
-    public partial class MainView : UserControl
+    public partial class HomeView : UserControl
     {
-        public MainView()
+        public HomeView()
         {
             InitializeComponent();
         }
