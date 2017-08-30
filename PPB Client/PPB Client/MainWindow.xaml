@@ -9,9 +9,10 @@
         mc:Ignorable="d"
         Height="350" Width="525" WindowStartupLocation="CenterScreen">
 
-    <Border Margin="10">
-        <ContentControl Name="ActiveItem" />
-    </Border>
+    <StackPanel>
+        <ContentControl Name="Status" />
+        <ContentControl Name="Main" />
+    </StackPanel>
     <!--
     <Window.Resources>
         <DataTemplate DataType="{x:Type viewmodels:LoginViewModel}">

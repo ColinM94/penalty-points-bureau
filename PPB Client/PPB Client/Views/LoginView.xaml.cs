@@ -8,26 +8,21 @@ using System.Security;
 
 namespace PPB_Client.Views
 {
-    /// <summary>
-    /// Interaction logic for LoginView.xaml
-    /// </summary>
+    // Code behind for login UI.
     public partial class LoginView : UserControl, IPassword
     {
-        /// <summary>
-        /// Login constructor
-        /// </summary>
+        // Constructor. 
         public LoginView()
         {
             InitializeComponent();
-            DataContext = new LoginViewModel();
 
-            UsernameTxtBox.Text = "Username";
+            // Sets data context for binding to the LoginViewModel.
+            //DataContext = new LoginViewModel();
+
             PasswordBox.Password = "**********";
         }
 
-        /// <summary>
-        /// Implemenation of IPassword, which allows the entered password to be passed securely to the ViewModel.
-        /// </summary>
+        // Implemenation of IPassword, which allows the entered password to be passed securely to the ViewModel.
         public SecureString Password
         {
             get
@@ -36,10 +31,7 @@ namespace PPB_Client.Views
             }
         }
 
-        /// <summary>
-        /// Removes username placeholder text if field is clicked.
-        /// </summary>
-        /// <param name="sender">UsernameTxtBox control</param>
+        // Removes username placeholder text if field is clicked.
         private void UsernameTxtBox_GotFocus(object sender, RoutedEventArgs e)
         {
             TextBox txtBox = sender as TextBox;
@@ -55,10 +47,7 @@ namespace PPB_Client.Views
             }
         }
 
-        /// <summary>
-        /// Resets username placeholder text if username field is empty.
-        /// </summary>
-        /// <param name="sender">UsernameTxtBox control</param>
+        // Resets username placeholder text if username field is empty.
         private void UsernameTxtBox_LostFocus(object sender, RoutedEventArgs e)
         {
             TextBox txtBox = sender as TextBox;
@@ -70,10 +59,7 @@ namespace PPB_Client.Views
             }
         }
 
-        /// <summary>
-        /// Removes password placeholder text if field is clicked.
-        /// </summary>
-        /// <param name="sender">PasswordBox control</param>
+        // Removes password placeholder text if field is clicked.
         private void PasswordBox_GotFocus(object sender, RoutedEventArgs e)
         {
             PasswordBox passBox = sender as PasswordBox;
@@ -90,10 +76,7 @@ namespace PPB_Client.Views
             }
         }
 
-        /// <summary>
-        /// Resets password placeholder text if username field is empty.
-        /// </summary>
-        /// <param name="sender">PasswordBox control</param>
+        // Resets password placeholder text if username field is empty.
         private void PasswordBox_LostFocus(object sender, RoutedEventArgs e)
         {
             PasswordBox passBox = sender as PasswordBox;
@@ -106,3 +89,4 @@ namespace PPB_Client.Views
         }
     }
 }
+

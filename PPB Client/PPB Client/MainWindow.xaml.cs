@@ -1,5 +1,4 @@
-﻿using PPB_Client.ViewModels;
-using PPB_Client.Views;
+﻿using PPB_Client.Views;
 using System.Windows;
 
 namespace PPB_Client
@@ -12,7 +11,8 @@ namespace PPB_Client
         public MainWindow()
         {
             InitializeComponent();
-            ActiveItem.Content = new LoginView();
+            Main.Content = new LoginView();
+            Status.Content = new StatusView();
             //DataContext = new LoginViewModel();
         }
     }

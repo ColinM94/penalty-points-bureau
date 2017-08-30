@@ -9,14 +9,19 @@
              xmlns:local="clr-namespace:PPB_Client.Views"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
-
+    <UserControl.DataContext>
+        <vm:LoginViewModel/>
+    </UserControl.DataContext>
     <StackPanel Height="200" Width="250" VerticalAlignment="Center" HorizontalAlignment="Center">
-        <TextBox Name="UsernameTxtBox" Text="{Binding Username, Mode=OneWayToSource}" Margin="15 15 15 0" Padding="5" 
-            FontSize="20" Background="White" BorderBrush="#FF3498DB" Foreground="#FF939393" GotFocus="UsernameTxtBox_GotFocus" LostFocus="UsernameTxtBox_LostFocus" />
         
-        <PasswordBox Name="PasswordBox"  Margin="15 10 15 0" Padding="5" FontSize="20" Background="White"  BorderBrush="#FF3498DB" 
+        <TextBox Name="UsernameTxtBox" Text="{Binding CurrentUsername}" Margin="15 15 15 0" Padding="5" 
+            FontSize="20" Background="White" BorderBrush="#FF3498DB" Foreground="#FF939393" GotFocus="UsernameTxtBox_GotFocus" LostFocus="UsernameTxtBox_LostFocus" />
+
+        <PasswordBox Name="PasswordBox" Margin="15 10 15 0" Padding="5" FontSize="20" Background="White"  BorderBrush="#FF3498DB" 
             Foreground="#FF939393" PasswordChar="*"  GotFocus="PasswordBox_GotFocus" LostFocus="PasswordBox_LostFocus"/>
 
-        <Button Name="LoginBtn" Command="{Binding LoginCommand}" CommandParameter="{Binding ElementName=This}" IsDefault="True" Margin="15 15 15 0" Height="45" Content="Login" FontSize="24" Background="#FF3498DB" Foreground="White" BorderThickness="0"/>
+        <Button Name="LoginBtn" Command="{Binding LoginCommand}" IsDefault="True" Margin="15 15 15 0" Height="45" Content="Login" FontSize="24" Background="#FF3498DB" Foreground="White" BorderThickness="0"/>
+        <TextBlock Text="{Binding LoginErrorMsg, Mode=OneWay}" />
     </StackPanel>
 </UserControl>
+

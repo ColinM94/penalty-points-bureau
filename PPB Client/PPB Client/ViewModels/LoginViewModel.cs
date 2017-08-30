@@ -1,77 +1,41 @@
 ﻿using System.Windows;
 using PPB_Client.Helpers;
 using System.Windows.Input;
-using System.Diagnostics;
+using PPB_Client.Models;
 
 namespace PPB_Client.ViewModels
 {
-    /// <summary>
-    /// Logic for login view.
-    /// </summary>
+    // Logic for Login
     public class LoginViewModel : BaseViewModel
-    {   
-        /// <summary>
-        /// Default constructor.
-        /// </summary>
+    {
+        // Constructor. Sets up default property values and commands.  
         public LoginViewModel()
         {
-            // Sets up login command
+            loginAttempts = 0;
+            CurrentUsername = "Username";
+
+            LoginErrorMsg = "Error Laaaad";
+
+            // Sets up login command.
             LoginCommand = new RelayCommand(Login);
         }
 
-        /// <summary>
-        /// Keeps track of number of login attempts
-        /// </summary>
-        private int loginAttempts = 0;
+        // Current username submitted by user
+        public string CurrentUsername { get; set; }
 
-        private string username;
-        /// <summary>
-        /// Gets and sets login username
-        /// </summary>
-        public string Username
-        {
-            get
-            {
-                return username;
-            }
+        // Current password submitted by user
+        public string CurrentPassword { get; set; }
+        
+        // Error message to be displayed to user on entry of wrong username/password combo
+        public string LoginErrorMsg { get; set; }
 
-            set
-            {
-                username = value;
-                OnPropertyChanged();
-            }
-        }
+        // Keeps track of number of login attempts by user.
+        private int loginAttempts;
 
-        private string password;
-        /// <summary>
-        /// Gets and sets login password
-        /// </summary>
-        public string Password
-        {
-            get
-            {
-                return password;
-            }
-            set
-            {
-                password = value;
-                OnPropertyChanged();
-            }
-        }
-
-        /// <summary>
-        /// Login command property
-        /// </summary>
-        public ICommand LoginCommand
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
-        /// Attempts to log in user. 
-        /// </summary>
-        /// <param name="parameter"></param>
+        // Login command which will be triggered from the UI. 
+        public ICommand LoginCommand { get; private set; }
+                      
+        // Attempts to log in current user. 
         private void Login(object parameter)
         {
             var passwordContainer = parameter as IPassword;
@@ -79,10 +43,25 @@ namespace PPB_Client.ViewModels
             if (passwordContainer != null)
             {
                 var secureString = passwordContainer.Password;
-                Password = SecureStringToString.Convert(secureString);
+                CurrentPassword = SecureStringToString.Convert(secureString);
             }
 
-            if(username == "username" && password == "password")
+            // Creates user object with entered username and password. 
+            User user = new User();
+            user.Username = CurrentUsername;
+            user.Password = CurrentPassword;
+
+            //server.Connect();
+            server.PingServer();
+
+
+            // Starts connection to server
+            //Server.Connect();
+
+
+            /*
+
+            if(CurrentUsername == "username" && CurrentPassword == "password")
                 MessageBox.Show("Logged in successfully");
 
             loginAttempts++;
@@ -90,6 +69,10 @@ namespace PPB_Client.ViewModels
             if (loginAttempts > 2)
                 MessageBox.Show("Account locked");
 
+            MessageBox.Show(CurrentUsername + CurrentPassword);
+
+            LoginErrorMsg = "hahahaha";
+            */
         }
     }
 }
