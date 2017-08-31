@@ -1,30 +1,23 @@
 ﻿using PPB_Client.Helpers;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Media;
 
 namespace PPB_Client.ViewModels
 {
-    class StatusViewModel : BaseViewModel
+    public class StatusViewModel : BaseViewModel
     {
         public StatusViewModel()
         {
             ServerStatus = "Disconnected";
-            ServerStatusForeground = "Red" ;
+            ServerStatus = "X";
+            ServerStatusForeground = "Red";
             ServerStatusToolTip = "No Connection to PPB Server";
-            //CheckStatus();
 
-            server.ServerConnected += OnServerConnected;
-            server.ServerDisconnected += OnServerDisconnected;
+            Server.ServerConnected += OnServerConnected;
+            Server.ServerDisconnected += OnServerDisconnected;
+        }      
 
-            server.Connect();
-        }
-
+        // Server connection status. 
         private string serverStatus;
         public string ServerStatus
         {
@@ -32,7 +25,7 @@ namespace PPB_Client.ViewModels
             {
                 return serverStatus;
             }
-                
+
             set
             {
                 serverStatus = value;
@@ -40,6 +33,7 @@ namespace PPB_Client.ViewModels
             }
         }
 
+        // Server connection status colour.
         private string serverStatusForeground;
         public string ServerStatusForeground
         {
@@ -55,20 +49,32 @@ namespace PPB_Client.ViewModels
             }
         }
 
-        public string ServerStatusToolTip { get; set; }
+        private string serverStatusToolTip;
+        public string ServerStatusToolTip
+        {
+            get
+            {
+                return serverStatusToolTip;
+            }
+            set
+            {
+                serverStatusToolTip = value;
+                OnPropertyChanged();
+            }
+        }
 
         public void OnServerConnected(object source, EventArgs e)
         {
-            ServerStatus = "Connected";
-            //ServerStatus = ((char)0x221A).ToString();
+            //ServerStatus = "Connected";
+            ServerStatus = "✓";
             ServerStatusForeground = "Green";
             ServerStatusToolTip = "Connected to PPB Server";
         }
 
         public void OnServerDisconnected(object source, EventArgs e)
         {
-            ServerStatus = "Disconnected";
-            //ServerStatus = ((char)0x221A).ToString();
+            //ServerStatus = "Disconnected";
+            ServerStatus = "X";
             ServerStatusForeground = "Red";
             ServerStatusToolTip = "No Connection to PPB Server";
         }

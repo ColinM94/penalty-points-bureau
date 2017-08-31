@@ -1,4 +1,6 @@
-﻿using PPB_Client.Views;
+﻿using PPB_Client.Helpers;
+using PPB_Client.Views;
+using System;
 using System.Windows;
 
 namespace PPB_Client
@@ -10,10 +12,22 @@ namespace PPB_Client
     {
         public MainWindow()
         {
-            InitializeComponent();
-            Main.Content = new LoginView();
+            InitializeComponent();          
             Status.Content = new StatusView();
-            //DataContext = new LoginViewModel();
+            Main.Content = new LoginView();
+
+            CurrentView.ViewChanged += ChangeView;
+
+
+        }
+
+        private void ChangeView(object source, string view)
+        {
+            if(view.Contains("LoginView"))
+                Main.Content = new LoginView();
+
+            if (view.Contains("HomeView"))
+                Main.Content = new HomeView();
         }
     }
 }

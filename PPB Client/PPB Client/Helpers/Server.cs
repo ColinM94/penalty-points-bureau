@@ -1,102 +1,123 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Newtonsoft.Json;
+using PPB_Client.Models;
+using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using System.Windows;
 
 namespace PPB_Client.Helpers
 {
-    public class Server
+    public static class Server 
     {
-        public delegate void ServerConnectedEventHandler(object source, EventArgs args);
-        public event ServerConnectedEventHandler ServerConnected;
+        public static event EventHandler ServerConnected;
+        public static event EventHandler ServerDisconnected;
+        public static event EventHandler MsgRevieved;
 
-        public delegate void ServerDisconnectedEventHandler(object source, EventArgs args);
-        public event ServerConnectedEventHandler ServerDisconnected;
-
-        public Server()
+        private static void OnServerConnected()
         {
-            //Connected = false;
-            //Connect();
+            Connected = true;
+            ServerConnected?.Invoke(null, EventArgs.Empty);
         }
 
-        public bool Connected { get; private set; }
-
-        String server = "127.0.0.1";
-        int port = 2000;
-        TcpClient client;
-        string ServerStatus;
-
-        protected virtual void OnServerConnected()
+        private static void OnServerDisconnected()
         {
-            ServerConnected?.Invoke(this, EventArgs.Empty);
+            Connected = false;
+            ServerDisconnected?.Invoke(null, EventArgs.Empty);
         }
 
-        protected virtual void OnServerDisconnected()
+        public static void OnMsgRecieved()
         {
-            ServerDisconnected?.Invoke(this, EventArgs.Empty);
+            MsgRevieved?.Invoke(null, EventArgs.Empty);
         }
 
-
-        public void Connect()
+        static Server()
         {
+            Thread connectionThread = new Thread(() => Connect());
+            connectionThread.Start();
+        }
+
+        static String server = "127.0.0.1";
+        static int port = 2000;
+        static TcpClient client;
+        public static bool Connected { get; set; } = false;
+
+        /// <summary>
+        /// Attempts to open connection to server.
+        /// </summary>
+        public static void Connect()
+        {
+            while (!Connected)
+            {
+                try
+                {              
+                    client = new TcpClient(server, port);
+                    MsgServer("test");
+                }
+                catch (Exception ex)
+                {
+                    //MessageBox.Show("Error connecting to PPB Server!\n\n" + ex.ToString());
+                }
+
+                Thread.Sleep(1000);
+            }            
+        }
+     
+        // Send message to server.
+        public static void MsgServer(string msg)
+        {            
+            Byte[] data = Encoding.ASCII.GetBytes(msg);
+
             try
             {
-                client = new TcpClient(server, port);
-                PingServer();
-                /*
-                if (client.Connected != true)
-                {
-                    
-
-                   // var portnum = ((IPEndPoint)client.Client.RemoteEndPoint).Port;
-
-                    
-               
-                    //Connected = true;
-                }
-                */
+                NetworkStream stream = client.GetStream();
+                stream.Write(data, 0, data.Length);
+                OnServerConnected();
             }
-            catch (Exception ex)
+            catch
             {
-                //MessageBox.Show("Error connecting to PPB Server!\n\n" + ex.ToString());
-
-                PingServer();
+                OnServerDisconnected();
+                Thread connectionThread = new Thread(() => Connect());
+                connectionThread.Start();
             }
         }
 
-        private void Disconnect()
+        // Sends json object containing properties and the method to be called on the server.
+        public static void SendJson(object ModelObject)
+        {
+            string json = JsonConvert.SerializeObject(ModelObject);
+            string encryptedJson = Encrypt.EncryptString(json, "ppb");
+
+            MsgServer(encryptedJson);
+        }
+
+        public static bool Login(string username, string password)
+        {
+            MsgServer($"LoginUsername=${username}$");
+
+            //TODO : Get user id from client and login
+
+            return false;
+
+            //Send
+            /*
+            Send()
+            // Creates user object with entered username and password. 
+            UserModel user = new UserModel();
+            user.Method = "Login";
+            user.Username = CurrentUsername;
+            user.Password = CurrentPassword;
+
+            Server.Send(user);
+            */
+        }
+
+        private static void Disconnect()
         {
             client.Close();
 
-            PingServer();
-        }
-
-        public void PingServer()
-        {
-            try
-            {
-                Byte[] data = System.Text.Encoding.ASCII.GetBytes("Ping");
-
-                NetworkStream stream = client.GetStream();
-
-                stream.Write(data, 0, data.Length);
-
-                if (client.Connected == true)
-                {
-                    var portnum = ((IPEndPoint)client.Client.RemoteEndPoint).Port;
-
-                    OnServerConnected();
-                }
-            }
-            catch (Exception ex)
-            {
-                OnServerDisconnected();
-                //MessageBox.Show("Error connecting to PPB Server!\n\n" + ex.ToString());
-            }
+            MsgServer("test");
         }
     }
 }

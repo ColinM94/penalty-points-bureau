@@ -6,15 +6,8 @@ using System.Threading.Tasks;
 
 namespace PPB_Client.Helpers
 {
-
-    public delegate void ConnectionDelegate(string str);
-
-    
-
-    class ServerStatusEventHandler
+    class IServerEvents
     {
-
-        public event ConnectionDelegate ConnectEvent;
 
     }
 }

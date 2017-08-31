@@ -13,14 +13,4 @@
         <ContentControl Name="Status" />
         <ContentControl Name="Main" />
     </StackPanel>
-    <!--
-    <Window.Resources>
-        <DataTemplate DataType="{x:Type viewmodels:LoginViewModel}">
-            <views:LoginView />
-        </DataTemplate>
-    </Window.Resources>
-    <Border Padding="20">
-        <ContentPresenter Content="{Binding}"/>
-    </Border>
-    -->
 </Window>

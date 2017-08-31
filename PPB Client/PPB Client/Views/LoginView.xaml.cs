@@ -16,9 +16,6 @@ namespace PPB_Client.Views
         {
             InitializeComponent();
 
-            // Sets data context for binding to the LoginViewModel.
-            //DataContext = new LoginViewModel();
-
             PasswordBox.Password = "**********";
         }
 
