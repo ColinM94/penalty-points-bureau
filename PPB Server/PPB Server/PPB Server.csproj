@@ -61,13 +61,16 @@
   <ItemGroup>
     <Compile Include="Helpers\Encrypt.cs" />
     <Compile Include="LoginUser.cs" />
+    <Compile Include="Models\BaseUserModel.cs" />
     <Compile Include="Models\UserModel.cs" />
     <Compile Include="Server.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

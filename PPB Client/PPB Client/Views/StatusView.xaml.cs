@@ -10,8 +10,6 @@ namespace PPB_Client.Views
         public StatusView()
         {
             InitializeComponent();
-
-            //DataContext = new StatusViewModel();
         }
     }
 }

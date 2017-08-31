@@ -4,12 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PPB_Client.ViewModels
+namespace PPB_Server.Models
 {
-    public class MainWindowViewModel
+    class BaseUserModel
     {
-        public int SwitchView { get; set; }
-
-
+        public string Method { get; set; }
     }
 }

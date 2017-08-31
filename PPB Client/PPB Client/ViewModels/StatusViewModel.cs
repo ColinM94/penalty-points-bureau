@@ -6,9 +6,35 @@ namespace PPB_Client.ViewModels
 {
     public class StatusViewModel : BaseViewModel
     {
+        #region Events
+        private void OnServerConnected(object source, EventArgs e)
+        {
+            SetConnected();
+        }
+
+        private void OnServerDisconnected(object source, EventArgs e)
+        {
+            SetDisconnected();
+        }
+
+        private void SetConnected()
+        {
+            ServerStatus = "✓";
+            ServerStatusForeground = "Green";
+            ServerStatusToolTip = "Connected to PPB Server";
+        }
+
+        private void SetDisconnected()
+        {
+            ServerStatus = "X";
+            ServerStatusForeground = "Red";
+            ServerStatusToolTip = "No Connection to PPB Server";
+        }
+       
+        #endregion
+
         public StatusViewModel()
         {
-            ServerStatus = "Disconnected";
             ServerStatus = "X";
             ServerStatusForeground = "Red";
             ServerStatusToolTip = "No Connection to PPB Server";
@@ -61,22 +87,6 @@ namespace PPB_Client.ViewModels
                 serverStatusToolTip = value;
                 OnPropertyChanged();
             }
-        }
-
-        public void OnServerConnected(object source, EventArgs e)
-        {
-            //ServerStatus = "Connected";
-            ServerStatus = "✓";
-            ServerStatusForeground = "Green";
-            ServerStatusToolTip = "Connected to PPB Server";
-        }
-
-        public void OnServerDisconnected(object source, EventArgs e)
-        {
-            //ServerStatus = "Disconnected";
-            ServerStatus = "X";
-            ServerStatusForeground = "Red";
-            ServerStatusToolTip = "No Connection to PPB Server";
         }
     }
 }

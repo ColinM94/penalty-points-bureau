@@ -12,27 +12,25 @@ namespace PPB_Server
 {
     public class LoginUser
     {
+        MySqlConnection conn;
+        MySqlCommand cmd;
+        MySqlDataReader reader = null;
+
+        string userID = null;
+        string hashedPass = null;
+
+        // Constructor
         public LoginUser()
         {
-
-        }
-
-        public bool Login(UserModel user)
-        {
-            MySqlConnection conn;
-            MySqlCommand cmd;
-            MySqlDataReader reader = null;
-            string userID = null;
-            string username = user.Username;
-            string password = user.Password;
-            string hashedPass = null;
-
             // Creates and opens MySQLConnection.
             conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["MySQL"].ConnectionString);
             conn.Open();
+        }
 
+        public string GetUserID(string username)
+        {
             // Prepared statement to get user id for entered username.
-            cmd = new MySqlCommand("SELECT user_id FROM users WHERE username = @username", conn);
+            cmd = new MySqlCommand("SELECT userid FROM users WHERE username = @username", conn);
             cmd.Parameters.AddWithValue("@username", username);
             cmd.Prepare();
 
@@ -43,6 +41,14 @@ namespace PPB_Server
                 userID = reader.GetInt16(0).ToString();
             }
             reader.Close();
+
+            return userID;
+        }
+
+        public bool Login(UserModel user)
+        {
+            string userID = user.UserID;
+            string password = user.Password;
 
             // Changes userid + password string into bytes.
             byte[] bytes = Encoding.UTF8.GetBytes(userID + password);
@@ -58,16 +64,21 @@ namespace PPB_Server
             }
 
             // Checks if a user exists with matchin user id and hashed password.
-            cmd = new MySqlCommand("SELECT * FROM users WHERE user_id = @userID AND password = @password", conn);
+            cmd = new MySqlCommand("SELECT * FROM users WHERE userid = @userID AND password = @password", conn);
             cmd.Parameters.AddWithValue("@userID", userID);
             cmd.Parameters.AddWithValue("@password", hashedPass);
             cmd.Prepare();
 
+            Console.WriteLine(hashedPass);
+
             // Executes query and reads result.
             reader = cmd.ExecuteReader();
+            Console.WriteLine(cmd);
+
             if (reader.Read())
             {
                 reader.Close();
+                conn.Close();
 
                 Console.WriteLine("Correct");
                 return true;
@@ -76,6 +87,7 @@ namespace PPB_Server
             else
             {
                 reader.Close();
+                conn.Close();
 
                 Console.WriteLine("Incorrect");
                 return false;

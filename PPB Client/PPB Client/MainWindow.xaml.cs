@@ -16,11 +16,11 @@ namespace PPB_Client
             Status.Content = new StatusView();
             Main.Content = new LoginView();
 
+            // Subscribes to the ChangeView event in CurrentView class which allows the main view to be changed from anywhere in the program. 
             CurrentView.ViewChanged += ChangeView;
-
-
         }
 
+        // New views can be added here and changed from the current view class. 
         private void ChangeView(object source, string view)
         {
             if(view.Contains("LoginView"))

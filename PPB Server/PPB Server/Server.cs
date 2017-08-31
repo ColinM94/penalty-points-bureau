@@ -1,17 +1,11 @@
-﻿using MySql.Data.MySqlClient;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using PPB_Server.Helpers;
 using PPB_Server.Models;
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
-using System.Configuration;
-using System.Security.Cryptography;
 using System.Dynamic;
 
 namespace PPB_Server
@@ -19,18 +13,17 @@ namespace PPB_Server
     public class Server
     {
         static void Main(string[] args)
-        {
-            Console.WriteLine("Penalty Points Bureau Server");
-            Console.WriteLine("Type \"HELP\" for list of commands\n");
-
+        {            
             ServerConsole server = new ServerConsole();
         }
     }
 
     public class ServerConsole
-    {
+    {       
         public ServerConsole()
         {
+            Console.WriteLine("Penalty Points Bureau Server");
+            Console.WriteLine("Type \"HELP\" for list of commands\n");
             menu();
         }
 
@@ -105,7 +98,6 @@ namespace PPB_Server
                 Thread clientThread = new Thread(()=>HandleClient(newClient));
                 clientThread.Start();
 
-                //newClient.Close();
             }
         }
 
@@ -114,10 +106,10 @@ namespace PPB_Server
         {
             TcpClient client = (TcpClient)newClient;
             NetworkStream stream = client.GetStream();
-            string username;
 
             bool userLoggedIn = false;
-
+            string userID = null;
+          
             String clientPort = ((IPEndPoint)client.Client.RemoteEndPoint).Port.ToString();
             Console.WriteLine("Client Connected on port " + clientPort);
 
@@ -126,57 +118,87 @@ namespace PPB_Server
                 while (running == true)
                 {                    
                     // Test client connection.
-                    MsgClient("test", client, stream);
+                    MsgClient("&test&", client, stream);
+                    new ManualResetEvent(false).WaitOne(1000);
 
+                    // Creates bytes array to store incoming message.
                     byte[] msgBytes = new byte[1024];
+
+                    // Creates Stringbuilder to store converted byte array.
                     StringBuilder msg = new StringBuilder();
+
+                    // Keeps track of number of bytes in byte array.
                     int numBytes = 0;
 
                     do
                     {
+                        // Sets number of bytes.
                         numBytes = stream.Read(msgBytes, 0, msgBytes.Length);
+
+                        // Converts byte array into String. 
                         msg.AppendFormat($"{Encoding.ASCII.GetString(msgBytes, 0, numBytes)}");
                     }
                     while (stream.DataAvailable);
 
-                    if (msg.ToString().Contains("{"))
-                    {
-                        string json = Encrypt.EncryptString(msg.ToString(), "ppb");
+                    string message = msg.ToString();
 
+                    if (message == null)
+                    {
+
+                    }
+
+                    // If client sends username then the corresponding userid needs to be returned. 
+                    else if (message.Contains("&LoginUsername&"))
+                    {
+                        Console.WriteLine($"From Client: {msg.ToString()}");
+                        string input = msg.ToString();
+                        string username = input.Split('$', '$')[1];
+
+                        LoginUser login = new LoginUser();
+                        userID = login.GetUserID(username);
+
+                        MsgClient($"&LoginUserID&=${userID}$", client, stream);
+                    }
+
+                    else if(message.Contains("&test&"))
+                    {
+                        Console.WriteLine($"From Client: {msg.ToString()}");
+                    }
+        
+                    // If message is a json string.
+                    else
+                    {
+                        // Decrypts json string.
+                        string json = Encrypt.DecryptString(msg.ToString(), "ppb");
+                        Console.WriteLine($"From Client: {json}");
                         // If client is attempting to log in.
                         if (json.Contains("\"Method\":\"Login\""))
                         {
+                            Console.WriteLine("Attempting login");
+                            // Converts json into UserModel object.
                             UserModel user = JsonConvert.DeserializeObject<UserModel>(json);
+                            Console.WriteLine(user.UserID + user.Password);
+                            Console.WriteLine(json);
+
+                            // Creates instance of LoginUser class.
                             LoginUser loginUser = new LoginUser();
+
+                            // If userid and password exists in db.
                             if(loginUser.Login(user))
                             {
                                 userLoggedIn = true;
 
-                                dynamic login = new ExpandoObject();
-                                login.Method = "login";
+                                //string encryptedJson = Encrypt.EncryptString(loginJson, "ppb");
 
+                                MsgClient("&LoginSuccess&", client, stream);
                             }
                         }
-                    }
-
-                    // If client sends username then the corresponding userid needs to be returned. 
-                    else if(msg.ToString().Contains("LoginUsername"))
-                    {
-                        string input = msg.ToString();
-                        string output = input.Split('$', '$')[1];
-
-                        // TODO : Get userid
-                        // TODO : Send userid to client
-                    }
-
-                    else
-                    {
-                        Console.WriteLine(msg);
                     }
                 }
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex);
                 Console.WriteLine("Client Disconnected");
             }
 
@@ -185,7 +207,7 @@ namespace PPB_Server
 
         private void MsgClient(string msg, TcpClient client, NetworkStream stream)
         {
-            Byte[] data = Encoding.ASCII.GetBytes("testconn");
+            Byte[] data = Encoding.ASCII.GetBytes(msg);
 
             stream.Write(data, 0, data.Length);
         }
