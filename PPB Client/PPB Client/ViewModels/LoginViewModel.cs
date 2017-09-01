@@ -20,7 +20,28 @@ namespace PPB_Client.ViewModels
 
         private void OnLoginFailure(object source, EventArgs e)
         {
-            LoginMsg = "Login Failed";
+            int loginAttempts;
+            Int32.TryParse(source.ToString(), out loginAttempts);
+
+            if(loginAttempts > 2)
+            {
+                LoginMsg = "Too many login attempts! Please contact an admin.";
+            }
+
+            else if(loginAttempts == 2)
+            {
+                LoginMsg = "Login failed. 1 login attempts remaining.";
+            }
+
+            else if(loginAttempts == 1)
+            {
+                LoginMsg = "Login failed. 2 login attempts remaining.";
+            }           
+            
+            else
+            {
+                LoginMsg = "Login failed.";
+            }
         }
 
         // Constructor.
@@ -61,37 +82,37 @@ namespace PPB_Client.ViewModels
                 OnPropertyChanged();
             }
         }
-
-        private void SwitchView()
-        {
-            CurrentView.View = "HomeView";
-        }
                          
         // Attempts to log in current user. 
         private void Login(object parameter)
         {
-            SecureString securePassword = null;
+            // Displays message if there is no server connection. 
+            if (!Server.Connected)
+            {
+                LoginMsg = "Server connection failed!";
+                return;
+            }
 
             // Extracts entered password from password container.
             var passwordContainer = parameter as IPassword;
 
             if(passwordContainer != null)
             {
-                securePassword = passwordContainer.Password;
+                string password = SecureStringToString.Convert(passwordContainer.Password);
 
-                if (CurrentUsername.Length == 0 || CurrentUsername.ToLower() == "username")
+                if (CurrentUsername.ToLower() == "username" || CurrentUsername.Length == 0 )
                 {
                     LoginMsg = "Username field empty!";
                 }
 
-                else if (SecureStringToString.Convert(securePassword).Contains("****"))
+                else if (password.Contains("****") || password.Length == 0 || password == null)
                 {
                     LoginMsg = "Password field empty!";
                 }
 
                 else
                 {
-                    Server.Login(CurrentUsername, securePassword);
+                    Server.Login(CurrentUsername, password);
                 }
             }
         }

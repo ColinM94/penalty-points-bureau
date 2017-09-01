@@ -17,7 +17,7 @@ namespace PPB_Client.ViewModels
             ServerStatusToolTip = "Connected to PPB Server";
         }
 
-        private void OnServerDisconnected(object source, EventArgs e)
+        private void OnServerDisConnected(object source, EventArgs e)
         {
             ServerStatus = "X";
             ServerStatusForeground = "Red";
@@ -27,15 +27,15 @@ namespace PPB_Client.ViewModels
         // Constructor.
         public StatusViewModel()
         {
-            // Defaults server status to disconnected. 
-            OnServerDisconnected(null, null);
+            // Defaults server status to disConnected. 
+            OnServerDisConnected(null, null);
             
             // Sets up logout command.
             LogoutCommand = new RelayCommand(Logout);
 
             // Subscribes to events.
             Server.ServerConnected += OnServerConnected;
-            Server.ServerDisconnected += OnServerDisconnected;
+            Server.ServerDisConnected += OnServerDisConnected;
         }
 
         // Logout command which will be triggered from the UI. 

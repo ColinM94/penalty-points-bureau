@@ -6,6 +6,8 @@ using System.Threading;
 using Newtonsoft.Json;
 using PPB_Client.Helpers;
 using PPB_Client.Models;
+using System.Collections.Generic;
+using System.Windows;
 
 namespace PPB_Client.Connection
 {
@@ -14,9 +16,10 @@ namespace PPB_Client.Connection
     /// </summary>
     public static class Server 
     {
-        // Events
+
+        #region Events
         public static event EventHandler ServerConnected;
-        public static event EventHandler ServerDisconnected;
+        public static event EventHandler ServerDisConnected;
         public static event EventHandler LoginSuccess;
         public static event EventHandler LoginFailure;
 
@@ -25,9 +28,9 @@ namespace PPB_Client.Connection
             ServerConnected?.Invoke(null, EventArgs.Empty);
         }
 
-        private static void OnServerDisconnected()
+        private static void OnServerDisConnected()
         {
-            ServerDisconnected?.Invoke(null, EventArgs.Empty);
+            ServerDisConnected?.Invoke(null, EventArgs.Empty);
         }
 
         public static void OnLoginSuccess()
@@ -35,10 +38,12 @@ namespace PPB_Client.Connection
             LoginSuccess?.Invoke(null, EventArgs.Empty);
         }
 
-        public static void OnLoginFailed()
+        public static void OnLoginFailed(string loginAttempts)
         {
-            LoginFailure?.Invoke(null, EventArgs.Empty);
+            LoginFailure?.Invoke(loginAttempts, EventArgs.Empty);
         }
+
+        #endregion
 
         // Properties
         static String server = "127.0.0.1";
@@ -47,8 +52,9 @@ namespace PPB_Client.Connection
         static NetworkStream stream;
         static SecureString securePassword;
         static string userID;
-        static bool connected;
-        public static bool LoggedIn;
+        static bool LoggedIn;
+
+        public static bool Connected { get; set; } = false;
 
         // Constructor
         static Server()
@@ -72,13 +78,14 @@ namespace PPB_Client.Connection
                     // Setup network stream with server.
                     stream = client.GetStream();
 
+                    Connected = true;
+                    
                     // Listen for messages from server on a separate thread.
                     Thread listenThread = new Thread(() => Listen());
                     listenThread.Start();
 
                     // Test connection with server. 
                     TestConn();
-
                 }
                 catch (Exception)
                 {
@@ -86,72 +93,66 @@ namespace PPB_Client.Connection
                     new ManualResetEvent(false).WaitOne(2000);
                 }
             }
-            while (!connected);
+            while (!Connected);
         }
      
         // Send message to server.
-        public static bool SendMsg(string msg)
+        public static bool SendToServer(ServerCommand command)
         {
-            // Encodes string into a sequence of bytes.
-            Byte[] data = Encoding.ASCII.GetBytes(msg);
+            // Serializes the command object into a json object. 
+            string json = JsonConvert.SerializeObject(command);
+
+            // Encrypts the json string. 
+            string encryptedJson = Encrypt.EncryptString(json, "ppb");
+
+            // Encodes json string into a sequence of bytes.
+            Byte[] data = Encoding.ASCII.GetBytes(encryptedJson);
 
             try
-            {               
+            {
                 // Sends message to server .
                 stream.Write(data, 0, data.Length);
-
-                // Return true if message sent successfully.
                 return true;
             }
             catch
             {
-                // Return false if message failed to send.
                 return false;
             }
         }
 
-        public static void Login(string username, SecureString securePass)
-        {
-            securePassword = securePass;
-
-            // Sends username to server so corresponding userID can be returned.
-            SendMsg($"&LoginUsername&=${username}$");           
-        }
-
         /// <summary>
-        /// Attempts to log user into PPB account. 
+        /// Attempts to login user to PPB server. 
         /// </summary>
-        private static void LoginUser()
-        {         
-            User user = new User();
-            user.Method = "Login";
-            user.UserID = userID;
-            user.Password = SecureStringToString.Convert(securePassword);
-
-            SendJson(user);
-        }
-
-        // Sends json object containing properties and the method to be called on the server.
-        private static void SendJson(object ModelObject)
+        public static void Login(string username, string password)
         {
-            string json = JsonConvert.SerializeObject(ModelObject);
+            // Creates user object and adds username password. 
+            User user = new User();
+            user.Username = username;
+            user.Password = password;
 
-            string encryptedJson = Encrypt.EncryptString(json, "ppb");
+            // Converts user object to a Dictionary. 
+            var UserInfo = DictionaryObjectConverter.ToDictionary(user);
 
-            SendMsg(encryptedJson);
+            // Creates a login command which carries the info and tells the server what to do with it. 
+            ServerCommand loginCmd = new ServerCommand();
+            loginCmd.Command = "login";
+            loginCmd.Parameters = UserInfo;
+
+            // Sends command to server.
+            SendToServer(loginCmd);           
         }
 
         // Listens for messages from the server. 
         private static void Listen()
         {
-            while (connected)
+            do
             {
                 try
-                {            
+                {
                     // Creates bytes array to store incoming message.
                     byte[] msgBytes = new byte[1024];
 
-                    // Creates Stringbuilder object to store converted byte array.
+                    // Creates Stringbuilder to store converted byte array.
                     StringBuilder msg = new StringBuilder();
 
                     // Keeps track of number of bytes in byte array.
@@ -167,61 +168,35 @@ namespace PPB_Client.Connection
                     }
                     while (stream.DataAvailable);
 
-                    // Converts msg to standard string.
-                    string message = msg.ToString();
+                    // Decrypts json string.
+                    string json = Encrypt.DecryptString(msg.ToString(), "ppb");
+
+                    // Deserialize json into ServerCommand object. 
+                    ServerCommand cmd = JsonConvert.DeserializeObject<ServerCommand>(json);
 
                     // If message is not empty.
-                    if (message != null)
+                    if (cmd.Command == "login_success")
                     {
-                        // If server is returning userID for a username.
-                        if (message.Contains("&LoginUserID&"))
-                        {
-                            string input = msg.ToString();
-                            userID = input.Split('$', '$')[1];
+                        LoggedIn = true;
+                        OnLoginSuccess();
+                    }
 
-                            LoginUser();
-                        }
+                    else if (cmd.Command == "login_failed")
+                    {
+                        string loginAttempts = cmd.Parameters["login_attempts"].ToString();
+                        
 
-                        // If server says login was successful.
-                        else if (message.Contains("&LoginSuccess&"))
-                        {
-                            LoggedIn = true;
-                            OnLoginSuccess();
-                        }
-
-                        // If server says login failed. 
-                        else if (message.Contains("&LoginFailed&"))
-                        {
-                            LoggedIn = false;
-                            OnLoginFailed();
-                        }
-
-                        // If server is testing connection.
-                        else if (message.Contains("&Test&"))
-                        {
-
-                        }
-
-                        else if(message.Contains("&Error&"))
-                        {
-
-                        }
-
-                        else
-                        {
-                            // Decrypts json string.
-                            string json = Encrypt.DecryptString(msg.ToString(), "ppb");
-                        }
-
-                        Console.WriteLine($"From Server: {message}");
+                        LoggedIn = false;
+                        OnLoginFailed(loginAttempts);
                     }
                 }
                 catch (Exception)
                 {
                     // Waits for entered milliseconds. 
-                    new ManualResetEvent(false).WaitOne(2000);
+                    //new ManualResetEvent(false).WaitOne(2000);
                 }
-            }                 
+            }
+            while (Connected);
         }
 
         // Tests server connection periodically.
@@ -229,20 +204,20 @@ namespace PPB_Client.Connection
         {
             while(true)
             {
-                if (SendMsg(""))
+                if (SendToServer(null))
                 {
-                    // Triggers server connected event.
+                    // Triggers server Connected event.
                     OnServerConnected();
 
-                    connected = true;
+                    Connected = true;
                 }
 
                 else
                 {
-                    // Triggers server disconnected event.
-                    OnServerDisconnected();
+                    // Triggers server disConnected event.
+                    OnServerDisConnected();
 
-                    connected = false;
+                    Connected = false;
 
                     // Attempts to reconnect to server again. 
                     Connect();
@@ -259,11 +234,11 @@ namespace PPB_Client.Connection
         private static void Disconnect()
         {
             client.Close();
-            connected = false;
+            Connected = false;
             stream.Close();
             securePassword = null;
 
-            SendMsg("test");
+            SendToServer(null);
         }
     }
 }

@@ -7,6 +7,9 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Dynamic;
+using System.Collections.Generic;
+using PPB_Server.Database;
+using System.IO;
 
 namespace PPB_Server
 {
@@ -31,7 +34,8 @@ namespace PPB_Server
         int port = 2000;
         TcpListener server;
         static bool running = false;
-
+        Dictionary<string, int> loginAttempts = new Dictionary<string, int>();
+        
         public void menu()
         {
             StartServer();
@@ -61,7 +65,6 @@ namespace PPB_Server
                         Console.WriteLine("STARTSERVER");
                         Console.WriteLine("STOPSERVER");
                         Console.WriteLine("EXIT");
-
                         break;
                     default:
                         Console.WriteLine("Uknown Command");
@@ -75,29 +78,31 @@ namespace PPB_Server
         {
             running = true;
 
-            // Instiates and starts Listener server.
+            // Instantiates and starts Listener server.
             server = new TcpListener(ip, port);
             server.Start();
 
             Console.WriteLine("Server Started on Port " + port + " with IP " + ip);
             Console.WriteLine("Awaiting Connections....");
 
-            // Thread waits for a client to connect.
-            Thread listenThread = new Thread(()=>Listen());
-            listenThread.Start();
+            // Hands off 
+            //Thread listenThread = new Thread(()=>Listen());
+            //listenThread.Start();
+            Listen();
            
         }
 
+        // Waits for a new client to connect and hands any new clients off to separate threads. 
         private void Listen()
         {
             while (running == true)
             {
+                // Waits for a new client. 
                 TcpClient newClient = server.AcceptTcpClient();
 
-                // Connected client is handed off to an instance of clientThread to free up listenThread.
+                // New client is handed off to a HandleClient thread. 
                 Thread clientThread = new Thread(()=>HandleClient(newClient));
                 clientThread.Start();
-
             }
         }
 
@@ -107,19 +112,19 @@ namespace PPB_Server
             TcpClient client = (TcpClient)newClient;
             NetworkStream stream = client.GetStream();
 
-            bool userLoggedIn = false;
-            string userID = null;
+            bool loggedIn = false;
+            string username = "Client";
           
             String clientPort = ((IPEndPoint)client.Client.RemoteEndPoint).Port.ToString();
-            Console.WriteLine("Client Connected on port " + clientPort);
+            Console.WriteLine($"Client Connected on port " + clientPort);
 
-            try
+            while (running == true)
             {
-                while (running == true)
-                {                    
+                try
+                {
                     // Test client connection.
-                    MsgClient("&test&", client, stream);
-                    new ManualResetEvent(false).WaitOne(1000);
+                    //MsgClient("&test&", client, stream);
+                    //new ManualResetEvent(false).WaitOne(1000);
 
                     // Creates bytes array to store incoming message.
                     byte[] msgBytes = new byte[1024];
@@ -140,75 +145,104 @@ namespace PPB_Server
                     }
                     while (stream.DataAvailable);
 
-                    string message = msg.ToString();
+                    // Decrypts json string.
+                    string json = Encrypt.DecryptString(msg.ToString(), "ppb");
 
-                    if (message == null)
+                    // Deserialize json into ServerCommand object. 
+                    ServerCommand cmd = JsonConvert.DeserializeObject<ServerCommand>(json);
+
+                    if(cmd.Command == "login")
                     {
+                        // Creates User object.
+                        User user = new User();
 
-                    }
+                        // Converts parameters dictionary back to a User object.
+                        user = DictionaryObjectConverter.ToObject<User>(cmd.Parameters);
 
-                    // If client sends username then the corresponding userid needs to be returned. 
-                    else if (message.Contains("&LoginUsername&"))
-                    {
-                        Console.WriteLine($"From Client: {msg.ToString()}");
-                        string input = msg.ToString();
-                        string username = input.Split('$', '$')[1];
-
+                        // Creates instance of LoginUser class. 
                         LoginUser login = new LoginUser();
-                        userID = login.GetUserID(username);
 
-                        MsgClient($"&LoginUserID&=${userID}$", client, stream);
-                    }
+                        // Creates a command to tell the client login was successful. 
+                        ServerCommand clientCmd = new ServerCommand();
 
-                    else if(message.Contains("&test&"))
-                    {
-                        Console.WriteLine($"From Client: {msg.ToString()}");
-                    }
-        
-                    // If message is a json string.
-                    else
-                    {
-                        // Decrypts json string.
-                        string json = Encrypt.DecryptString(msg.ToString(), "ppb");
-                        Console.WriteLine($"From Client: {json}");
-                        // If client is attempting to log in.
-                        if (json.Contains("\"Method\":\"Login\""))
+                        // Creates dictionary to store parameters. 
+                        var dictionary = new Dictionary<string, object>();
+
+                        // Checks if loginAttempts dictionary doesn't contain entered username. 
+                        if(!loginAttempts.ContainsKey(user.Username))
                         {
-                            Console.WriteLine("Attempting login");
-                            // Converts json into UserModel object.
-                            User user = JsonConvert.DeserializeObject<User>(json);
-                            Console.WriteLine(user.UserID + user.Password);
-                            Console.WriteLine(json);
+                            // Adds username to dictionary so login attemps can be tracked. 
+                            loginAttempts.Add(user.Username, 0);
+                        }
 
-                            // Creates instance of LoginUser class.
-                            LoginUser loginUser = new LoginUser();
+                        // Checks if login was successful and user has doesn't have too many login attempts. 
+                        if(login.Login(user) && loginAttempts[user.Username] < 3 )
+                        {
+                            // If an entry exists it is deleted. 
+                            loginAttempts.Remove(user.Username);
 
-                            // If userid and password exists in db.
-                            if(loginUser.Login(user))
-                            {
-                                userLoggedIn = true;
+                            // Sets logged in username. 
+                            username = user.Username;
 
-                                //string encryptedJson = Encrypt.EncryptString(loginJson, "ppb");
+                            clientCmd.Command = "login_success";
 
-                                MsgClient("&LoginSuccess&", client, stream);
-                            }
+                            Console.WriteLine($"{username}: Login Successful");
+
+                            SendToClient(clientCmd, client, stream);
+
+                            loggedIn = true;
+
+                        }  
+                        
+                        else
+                        {
+                            Console.WriteLine($"{user.Username}: Login failed");
+
+                            // Increases number of failed login attempts. 
+                            loginAttempts[user.Username]++;
+
+                            // Adds number of login attempts to parameters so the user can be warned. 
+                            dictionary.Add("login_attempts", loginAttempts[user.Username]);
+
+                            // Command 
+                            clientCmd.Command = "login_failed";
+                            clientCmd.Parameters = dictionary;
+
+                            SendToClient(clientCmd, client, stream);
+
+                            loggedIn = false;
+
                         }
                     }
+                }  
+                catch(Exception ex)
+                {
+                    //Console.WriteLine(ex);
                 }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Client Disconnected");
-            }
-
-            client.Close();
+            }                                        
         }
 
-        private void MsgClient(string msg, TcpClient client, NetworkStream stream)
+        private bool SendToClient(ServerCommand command, TcpClient client, NetworkStream stream)
         {
-            Byte[] data = Encoding.ASCII.GetBytes(msg);
+            // Serializes the command object into a json object. 
+            string json = JsonConvert.SerializeObject(command);
 
-            stream.Write(data, 0, data.Length);
+            // Encrypts the json string. 
+            string encryptedJson = Encrypt.EncryptString(json, "ppb");
+
+            // Encodes json string into a sequence of bytes.
+            Byte[] data = Encoding.ASCII.GetBytes(encryptedJson);
+
+            try
+            {
+                // Sends message to server .
+                stream.Write(data, 0, data.Length);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private void ListClients()

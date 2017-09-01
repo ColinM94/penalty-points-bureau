@@ -59,9 +59,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Helpers\DictionaryObjectConverter.cs" />
     <Compile Include="Helpers\Encrypt.cs" />
-    <Compile Include="LoginUser.cs" />
+    <Compile Include="Helpers\ObjectToDictionary.cs" />
+    <Compile Include="Database\LoginUser.cs" />
     <Compile Include="Models\BaseModel.cs" />
+    <Compile Include="Models\ServerCommand.cs" />
     <Compile Include="Models\User.cs" />
     <Compile Include="Server.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

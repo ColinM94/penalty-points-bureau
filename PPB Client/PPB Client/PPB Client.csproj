@@ -83,13 +83,14 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Helpers\DictionaryObjectConverter.cs" />
     <Compile Include="Helpers\Encrypt.cs" />
     <Compile Include="Helpers\CurrentView.cs" />
     <Compile Include="Helpers\RelayCommand.cs" />
     <Compile Include="Helpers\SecureStringToString.cs" />
     <Compile Include="Helpers\IPassword.cs" />
     <Compile Include="Connection\Server.cs" />
-    <Compile Include="Models\BaseModel.cs" />
+    <Compile Include="Models\ServerCommand.cs" />
     <Compile Include="Models\User.cs" />
     <Compile Include="ViewModels\BaseViewModel.cs" />
     <Compile Include="ViewModels\HomeViewModel.cs" />

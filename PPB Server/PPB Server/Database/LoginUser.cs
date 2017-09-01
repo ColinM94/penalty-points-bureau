@@ -8,27 +8,25 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Security.Cryptography;
 
-namespace PPB_Server
+namespace PPB_Server.Database
 {
     public class LoginUser
-    {
-        MySqlConnection conn;
-        MySqlCommand cmd;
-        MySqlDataReader reader = null;
-
-        string userID = null;
-        string hashedPass = null;
-
-        // Constructor
-        public LoginUser()
+    {       
+        public bool Login(User user)
         {
+            MySqlConnection conn;
+            MySqlCommand cmd;
+            MySqlDataReader reader = null;
+
+            string userID = null;
+            string username = user.Username;
+            string password = user.Password;
+            string hashedPass = null;
+
             // Creates and opens MySQLConnection.
             conn = new MySqlConnection(ConfigurationManager.ConnectionStrings["MySQL"].ConnectionString);
             conn.Open();
-        }
 
-        public string GetUserID(string username)
-        {
             // Prepared statement to get user id for entered username.
             cmd = new MySqlCommand("SELECT userid FROM users WHERE username = @username", conn);
             cmd.Parameters.AddWithValue("@username", username);
@@ -41,14 +39,6 @@ namespace PPB_Server
                 userID = reader.GetInt16(0).ToString();
             }
             reader.Close();
-
-            return userID;
-        }
-
-        public bool Login(User user)
-        {
-            string userID = user.UserID;
-            string password = user.Password;
 
             // Changes userid + password string into bytes.
             byte[] bytes = Encoding.UTF8.GetBytes(userID + password);
@@ -69,18 +59,14 @@ namespace PPB_Server
             cmd.Parameters.AddWithValue("@password", hashedPass);
             cmd.Prepare();
 
-            Console.WriteLine(hashedPass);
-
             // Executes query and reads result.
             reader = cmd.ExecuteReader();
-            Console.WriteLine(cmd);
 
             if (reader.Read())
             {
                 reader.Close();
                 conn.Close();
 
-                Console.WriteLine("Correct");
                 return true;
             }
 
@@ -89,7 +75,6 @@ namespace PPB_Server
                 reader.Close();
                 conn.Close();
 
-                Console.WriteLine("Incorrect");
                 return false;
             }
         }
