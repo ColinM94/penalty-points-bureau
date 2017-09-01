@@ -1,21 +1,17 @@
-﻿using PPB_Client.Helpers;
-using System.Windows.Input;
-using PPB_Client.Models;
-using Newtonsoft.Json;
-using System.Windows;
-using System.Threading;
-using System;
+﻿using System;
 using System.Security;
 using System.Windows.Threading;
+using System.Windows.Input;
+using System.Windows;
+using PPB_Client.Helpers;
+using PPB_Client.Connection;
 
 namespace PPB_Client.ViewModels
 {
     // Logic for Login.
     public class LoginViewModel : BaseViewModel
     {
-        private delegate void InvokeDelegate();
-        #region Events
-
+        // Events
         private void OnLoginSuccess(object source, EventArgs e)
         {
             // Allows CurrentView.View to be changed from a non UI thread. 
@@ -26,11 +22,11 @@ namespace PPB_Client.ViewModels
         {
             LoginMsg = "Login Failed";
         }
-        #endregion
 
-        // Constructor. Sets up default property values and commands.  
+        // Constructor.
         public LoginViewModel()
         {
+            // Sets field to default text. Password does no
             CurrentUsername = "Username";
 
             // Sets up login command.
@@ -47,6 +43,9 @@ namespace PPB_Client.ViewModels
 
         // Current username submitted by user.
         public string CurrentUsername { get; set; }
+
+        // Current username submitted by user.
+        public string CurrentPassword { get; set; }
 
         // Login error message displayed on login view. 
         private string loginMsg;
@@ -70,7 +69,7 @@ namespace PPB_Client.ViewModels
                          
         // Attempts to log in current user. 
         private void Login(object parameter)
-        {            
+        {
             SecureString securePassword = null;
 
             // Extracts entered password from password container.
@@ -94,7 +93,6 @@ namespace PPB_Client.ViewModels
                 {
                     Server.Login(CurrentUsername, securePassword);
                 }
-                
             }
         }
     }

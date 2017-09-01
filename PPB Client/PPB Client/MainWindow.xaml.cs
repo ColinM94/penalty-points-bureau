@@ -1,7 +1,7 @@
-﻿using PPB_Client.Helpers;
-using PPB_Client.Views;
-using System;
+﻿using System;
 using System.Windows;
+using PPB_Client.Helpers;
+using PPB_Client.Views;
 
 namespace PPB_Client
 {

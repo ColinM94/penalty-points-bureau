@@ -176,7 +176,7 @@ namespace PPB_Server
                         {
                             Console.WriteLine("Attempting login");
                             // Converts json into UserModel object.
-                            UserModel user = JsonConvert.DeserializeObject<UserModel>(json);
+                            User user = JsonConvert.DeserializeObject<User>(json);
                             Console.WriteLine(user.UserID + user.Password);
                             Console.WriteLine(json);
 
@@ -198,7 +198,6 @@ namespace PPB_Server
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
                 Console.WriteLine("Client Disconnected");
             }
 

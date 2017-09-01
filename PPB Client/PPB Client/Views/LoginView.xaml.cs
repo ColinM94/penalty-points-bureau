@@ -1,10 +1,9 @@
-﻿using PPB_Client.Helpers;
-using PPB_Client.ViewModels;
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Security;
+using PPB_Client.Helpers;
 
 namespace PPB_Client.Views
 {
@@ -16,6 +15,7 @@ namespace PPB_Client.Views
         {
             InitializeComponent();
 
+            // Sets password placeholder text. 
             PasswordBox.Password = "**********";
         }
 

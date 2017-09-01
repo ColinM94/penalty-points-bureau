@@ -1,20 +1,20 @@
-﻿using Newtonsoft.Json;
-using PPB_Client.Models;
-using System;
-using System.Net;
+﻿using System;
 using System.Net.Sockets;
 using System.Security;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Threading;
+using Newtonsoft.Json;
+using PPB_Client.Helpers;
+using PPB_Client.Models;
 
-namespace PPB_Client.Helpers
+namespace PPB_Client.Connection
 {
+    /// <summary>
+    /// Contains functionality allowing the client to communicate with the PPB Server. 
+    /// </summary>
     public static class Server 
     {
-        #region Events
+        // Events
         public static event EventHandler ServerConnected;
         public static event EventHandler ServerDisconnected;
         public static event EventHandler LoginSuccess;
@@ -31,7 +31,7 @@ namespace PPB_Client.Helpers
         }
 
         public static void OnLoginSuccess()
-        {           
+        {
             LoginSuccess?.Invoke(null, EventArgs.Empty);
         }
 
@@ -40,18 +40,17 @@ namespace PPB_Client.Helpers
             LoginFailure?.Invoke(null, EventArgs.Empty);
         }
 
-        #endregion       
-
+        // Properties
         static String server = "127.0.0.1";
         static int port = 2000;
         static TcpClient client;     
         static NetworkStream stream;
         static SecureString securePassword;
         static string userID;
+        static bool connected;
+        public static bool LoggedIn;
 
-        public static bool Connected { get; set; } = false;
-        public static bool LoggedIn { get; set; } = false;
-
+        // Constructor
         static Server()
         {
             Thread connectionThread = new Thread(() => Connect());
@@ -81,19 +80,17 @@ namespace PPB_Client.Helpers
                     TestConn();
 
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    Console.WriteLine("Connect Error!");
-
                     // Waits for entered milliseconds. 
                     new ManualResetEvent(false).WaitOne(2000);
                 }
             }
-            while (!Connected);
+            while (!connected);
         }
      
         // Send message to server.
-        public static bool MsgServer(string msg)
+        public static bool SendMsg(string msg)
         {
             // Encodes string into a sequence of bytes.
             Byte[] data = Encoding.ASCII.GetBytes(msg);
@@ -118,7 +115,7 @@ namespace PPB_Client.Helpers
             securePassword = securePass;
 
             // Sends username to server so corresponding userID can be returned.
-            MsgServer($"&LoginUsername&=${username}$");           
+            SendMsg($"&LoginUsername&=${username}$");           
         }
 
         /// <summary>
@@ -126,7 +123,7 @@ namespace PPB_Client.Helpers
         /// </summary>
         private static void LoginUser()
         {         
-            UserModel user = new UserModel();
+            User user = new User();
             user.Method = "Login";
             user.UserID = userID;
             user.Password = SecureStringToString.Convert(securePassword);
@@ -141,15 +138,13 @@ namespace PPB_Client.Helpers
 
             string encryptedJson = Encrypt.EncryptString(json, "ppb");
 
-            MsgServer(encryptedJson);
+            SendMsg(encryptedJson);
         }
 
         // Listens for messages from the server. 
         private static void Listen()
         {
-            Console.WriteLine("Listening");
-
-            while (Connected)
+            while (connected)
             {
                 try
                 {            
@@ -185,7 +180,6 @@ namespace PPB_Client.Helpers
                             userID = input.Split('$', '$')[1];
 
                             LoginUser();
-
                         }
 
                         // If server says login was successful.
@@ -208,7 +202,12 @@ namespace PPB_Client.Helpers
 
                         }
 
-                        else if (message.Length > 50)
+                        else if(message.Contains("&Error&"))
+                        {
+
+                        }
+
+                        else
                         {
                             // Decrypts json string.
                             string json = Encrypt.DecryptString(msg.ToString(), "ppb");
@@ -217,10 +216,8 @@ namespace PPB_Client.Helpers
                         Console.WriteLine($"From Server: {message}");
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    Console.WriteLine("Listen Error!");
-                    Console.WriteLine(ex);
                     // Waits for entered milliseconds. 
                     new ManualResetEvent(false).WaitOne(2000);
                 }
@@ -232,12 +229,12 @@ namespace PPB_Client.Helpers
         {
             while(true)
             {
-                if (MsgServer(""))
+                if (SendMsg(""))
                 {
                     // Triggers server connected event.
                     OnServerConnected();
 
-                    Connected = true;
+                    connected = true;
                 }
 
                 else
@@ -245,7 +242,7 @@ namespace PPB_Client.Helpers
                     // Triggers server disconnected event.
                     OnServerDisconnected();
 
-                    Connected = false;
+                    connected = false;
 
                     // Attempts to reconnect to server again. 
                     Connect();
@@ -262,8 +259,11 @@ namespace PPB_Client.Helpers
         private static void Disconnect()
         {
             client.Close();
+            connected = false;
+            stream.Close();
+            securePassword = null;
 
-            MsgServer("test");
+            SendMsg("test");
         }
     }
 }

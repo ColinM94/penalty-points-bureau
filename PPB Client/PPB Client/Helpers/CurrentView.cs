@@ -20,8 +20,11 @@ namespace PPB_Client.Helpers
             ViewChanged?.Invoke(null, view);
         }
 
-        // Changing this value will change the current view. 
         private static string view;
+
+        /// <summary>
+        /// Changing this value will change the current main view. e.g View="LoginView".
+        /// </summary>
         public static string View
         {
             get

@@ -61,8 +61,8 @@
   <ItemGroup>
     <Compile Include="Helpers\Encrypt.cs" />
     <Compile Include="LoginUser.cs" />
-    <Compile Include="Models\BaseUserModel.cs" />
-    <Compile Include="Models\UserModel.cs" />
+    <Compile Include="Models\BaseModel.cs" />
+    <Compile Include="Models\User.cs" />
     <Compile Include="Server.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

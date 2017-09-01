@@ -45,7 +45,7 @@ namespace PPB_Server
             return userID;
         }
 
-        public bool Login(UserModel user)
+        public bool Login(User user)
         {
             string userID = user.UserID;
             string password = user.Password;

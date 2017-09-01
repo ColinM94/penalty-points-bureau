@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PPB_Client.Helpers
+namespace PPB_Server.Models
 {
-    class IServerEvents
+    class BaseModel
     {
-
+        public string Method { get; set; }
     }
 }

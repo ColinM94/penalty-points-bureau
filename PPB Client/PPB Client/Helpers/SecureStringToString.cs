@@ -16,8 +16,6 @@ namespace PPB_Client.Helpers
         /// <summary>
         /// Takes a SecureString and returns a standard string.
         /// </summary>
-        /// <param name="secureString"></param>
-        /// <returns>Standard String</returns>
         public static string Convert(SecureString secureString)
         {
             if (secureString == null)

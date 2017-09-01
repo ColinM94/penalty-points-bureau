@@ -7,10 +7,10 @@
         xmlns:viewmodels="clr-namespace:PPB_Client.ViewModels"
         xmlns:views="clr-namespace:PPB_Client.Views"
         mc:Ignorable="d"
-        Height="350" Width="525" WindowStartupLocation="CenterScreen">
-
-    <StackPanel>
-        <ContentControl Name="Status" />
+        Title="Penalty Points Bureau"
+        Height="500" Width="800" WindowStartupLocation="CenterScreen" MinWidth="800" MinHeight="500">
+    <DockPanel LastChildFill="True">
+        <ContentControl DockPanel.Dock="Top" Name="Status" />
         <ContentControl Name="Main" />
-    </StackPanel>
+    </DockPanel>
 </Window>

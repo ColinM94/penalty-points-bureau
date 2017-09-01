@@ -6,6 +6,10 @@ using System.Text;
 namespace PPB_Client.Helpers
 {
     // Source http://tekeye.biz/2015/encrypt-decrypt-c-sharp-string
+
+    /// <summary>
+    /// Allows encrypttion and decryption of strings. 
+    /// </summary>
     class Encrypt
     {
         // This size of the IV (in bytes) must = (keysize / 8).  Default keysize is 256, so the IV must be

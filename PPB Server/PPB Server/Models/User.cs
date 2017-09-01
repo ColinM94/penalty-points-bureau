@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 
 namespace PPB_Server.Models
 {
-    class BaseUserModel
+    public class User
     {
-        public string Method { get; set; }
+        public string UserID { get; set; }
+
+        public string Password { get; set; }
     }
 }
