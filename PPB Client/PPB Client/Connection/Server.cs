@@ -16,10 +16,9 @@ namespace PPB_Client.Connection
     /// </summary>
     public static class Server 
     {
-
         #region Events
         public static event EventHandler ServerConnected;
-        public static event EventHandler ServerDisConnected;
+        public static event EventHandler ServerDisconnected;
         public static event EventHandler LoginSuccess;
         public static event EventHandler LoginFailure;
 
@@ -28,9 +27,9 @@ namespace PPB_Client.Connection
             ServerConnected?.Invoke(null, EventArgs.Empty);
         }
 
-        private static void OnServerDisConnected()
+        private static void OnServerDisconnected()
         {
-            ServerDisConnected?.Invoke(null, EventArgs.Empty);
+            ServerDisconnected?.Invoke(null, EventArgs.Empty);
         }
 
         public static void OnLoginSuccess()
@@ -38,9 +37,9 @@ namespace PPB_Client.Connection
             LoginSuccess?.Invoke(null, EventArgs.Empty);
         }
 
-        public static void OnLoginFailed(string loginAttempts)
+        public static void OnLoginFailed(string loginMsg)
         {
-            LoginFailure?.Invoke(loginAttempts, EventArgs.Empty);
+            LoginFailure?.Invoke(loginMsg, EventArgs.Empty);
         }
 
         #endregion
@@ -81,10 +80,10 @@ namespace PPB_Client.Connection
                     Connected = true;
                     
                     // Listen for messages from server on a separate thread.
-                    Thread listenThread = new Thread(() => Listen());
+                    Thread listenThread = new Thread(Listen);
                     listenThread.Start();
 
-                    // Test connection with server. 
+                    // Repeatedly tests connection with server. 
                     TestConn();
                 }
                 catch (Exception)
@@ -183,11 +182,11 @@ namespace PPB_Client.Connection
 
                     else if (cmd.Command == "login_failed")
                     {
-                        string loginAttempts = cmd.Parameters["login_attempts"].ToString();
-                        
+                        string errorMsg = cmd.Parameters["login_failed"].ToString();
 
                         LoggedIn = false;
-                        OnLoginFailed(loginAttempts);
+
+                        OnLoginFailed(errorMsg);
                     }
                 }
                 catch (Exception)
@@ -202,7 +201,7 @@ namespace PPB_Client.Connection
         // Tests server connection periodically.
         private static void TestConn()
         {
-            while(true)
+            while (true)
             {
                 if (SendToServer(null))
                 {
@@ -215,7 +214,7 @@ namespace PPB_Client.Connection
                 else
                 {
                     // Triggers server disConnected event.
-                    OnServerDisConnected();
+                    OnServerDisconnected();
 
                     Connected = false;
 
@@ -228,7 +227,7 @@ namespace PPB_Client.Connection
 
                 // Waits for entered milliseconds. 
                 new ManualResetEvent(false).WaitOne(4000);
-            }          
+            }
         }
 
         private static void Disconnect()

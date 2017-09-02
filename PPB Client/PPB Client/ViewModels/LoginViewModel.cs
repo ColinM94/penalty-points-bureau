@@ -20,28 +20,12 @@ namespace PPB_Client.ViewModels
 
         private void OnLoginFailure(object source, EventArgs e)
         {
-            int loginAttempts;
-            Int32.TryParse(source.ToString(), out loginAttempts);
+            LoginMsg = source.ToString();
+        }
 
-            if(loginAttempts > 2)
-            {
-                LoginMsg = "Too many login attempts! Please contact an admin.";
-            }
-
-            else if(loginAttempts == 2)
-            {
-                LoginMsg = "Login failed. 1 login attempts remaining.";
-            }
-
-            else if(loginAttempts == 1)
-            {
-                LoginMsg = "Login failed. 2 login attempts remaining.";
-            }           
+        private void OnServerConnected(object source, EventArgs e)
+        {
             
-            else
-            {
-                LoginMsg = "Login failed.";
-            }
         }
 
         // Constructor.
@@ -56,6 +40,7 @@ namespace PPB_Client.ViewModels
             // Subscribes to login events in Server class 
             Server.LoginSuccess += OnLoginSuccess;
             Server.LoginFailure += OnLoginFailure;
+            Server.ServerConnected += OnServerConnected;
 
         }
 

@@ -61,19 +61,28 @@
   <ItemGroup>
     <Compile Include="Helpers\DictionaryObjectConverter.cs" />
     <Compile Include="Helpers\Encrypt.cs" />
+    <Compile Include="Helpers\Logger.cs" />
     <Compile Include="Helpers\ObjectToDictionary.cs" />
     <Compile Include="Database\LoginUser.cs" />
-    <Compile Include="Models\BaseModel.cs" />
     <Compile Include="Models\ServerCommand.cs" />
     <Compile Include="Models\User.cs" />
-    <Compile Include="Server.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="HandleClient.cs" />
+    <Compile Include="MsgClient.cs" />
+    <Compile Include="Server.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <Content Include="Logs\DummyLog.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="MySql.Data.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

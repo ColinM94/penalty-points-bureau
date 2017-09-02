@@ -1,44 +1,64 @@
-﻿using Newtonsoft.Json;
-using PPB_Server.Helpers;
-using PPB_Server.Models;
-using System;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using System.Dynamic;
-using System.Collections.Generic;
+using System.Threading.Tasks;
 using PPB_Server.Database;
-using System.IO;
+using PPB_Server.Helpers;
 
 namespace PPB_Server
 {
-    public class Server
+    public static class Server
     {
         static void Main(string[] args)
-        {            
-            ServerConsole server = new ServerConsole();
-        }
-    }
-
-    public class ServerConsole
-    {       
-        public ServerConsole()
         {
+            Menu();
+        }
+
+        /// <summary>
+        /// Server IP address.
+        /// </summary>
+        public static IPAddress IP = IPAddress.Parse("127.0.0.1");
+
+        /// <summary>
+        /// Server Port.
+        /// </summary>
+        public static int Port = 2000;
+
+        /// <summary>
+        /// Listens for connections from TCP network clients.
+        /// </summary>
+        public static TcpListener Listener;
+
+        /// <summary>
+        /// Keeps track of whether server is running or not. 
+        /// </summary>
+        public static bool Running = false;
+
+        /// <summary>
+        /// Stores number of login attempts for user.
+        /// </summary>
+        public static Dictionary<string, int> LoginAttempts = new Dictionary<string, int>();
+
+        /// <summary>
+        /// If set to true then debug information will be displayed in the console. 
+        /// </summary>
+        public static bool Debug = false;
+
+        /// <summary>
+        /// Opens server command menu. 
+        /// </summary>
+        public static void Menu()
+        {
+            SwitchDebug();
+            StartServer();
+
             Console.WriteLine("Penalty Points Bureau Server");
             Console.WriteLine("Type \"HELP\" for list of commands\n");
-            menu();
-        }
-
-        IPAddress ip = IPAddress.Parse("127.0.0.1");
-        int port = 2000;
-        TcpListener server;
-        static bool running = false;
-        Dictionary<string, int> loginAttempts = new Dictionary<string, int>();
-        
-        public void menu()
-        {
-            StartServer();
 
             bool exit = false;
 
@@ -54,211 +74,93 @@ namespace PPB_Server
                     case "STOPSERVER":
                         StopServer();
                         break;
-                    case "CLIENTLIST":
-                        ListClients();
+                    case "DEBUG":
+                        SwitchDebug();
+                        break;
+                    case "HELP":
+                        Help();
                         break;
                     case "EXIT":
                         Exit();
                         break;
-                    case "HELP":
-                        Console.WriteLine("Commands:");
-                        Console.WriteLine("STARTSERVER");
-                        Console.WriteLine("STOPSERVER");
-                        Console.WriteLine("EXIT");
-                        break;
                     default:
-                        Console.WriteLine("Uknown Command");
+                        Console.WriteLine("Unknown Command");
                         break;
                 }
             }
         }
 
-        // Listens for incoming connections.
-        private void StartServer()
-        {
-            running = true;
-
-            // Instantiates and starts Listener server.
-            server = new TcpListener(ip, port);
-            server.Start();
-
-            Console.WriteLine("Server Started on Port " + port + " with IP " + ip);
-            Console.WriteLine("Awaiting Connections....");
-
-            // Hands off 
-            //Thread listenThread = new Thread(()=>Listen());
-            //listenThread.Start();
-            Listen();
-           
+        // Starts PPB server.
+        private static void StartServer()
+        {            
+            // Listens for clients on a separate thread.  
+            Thread listenThread = new Thread(Listen);
+            listenThread.Start();
         }
 
-        // Waits for a new client to connect and hands any new clients off to separate threads. 
-        private void Listen()
+        // Deals with new client connections.
+        private static void Listen()
         {
-            while (running == true)
+            Running = true;
+
+            // Starts Listener server.
+            Listener = new TcpListener(IP, Port);
+            Listener.Start();
+
+            Console.WriteLine("Server Started on Port " + Port + " with IP " + IP);
+            Console.WriteLine("Awaiting Connections....");
+
+            while (Running == true)
             {
                 // Waits for a new client. 
-                TcpClient newClient = server.AcceptTcpClient();
+                TcpClient newClient = Listener.AcceptTcpClient();
+
+                // Creates instance of HandleClient class. 
+                var handleClient = new HandleClient();
 
                 // New client is handed off to a HandleClient thread. 
-                Thread clientThread = new Thread(()=>HandleClient(newClient));
+                Thread clientThread = new Thread(() => handleClient.Handle(newClient));
                 clientThread.Start();
             }
         }
-
-        // Deals with a single client.
-        private void HandleClient(object newClient)
+      
+        // Stops PPB server.
+        private static void StopServer()
         {
-            TcpClient client = (TcpClient)newClient;
-            NetworkStream stream = client.GetStream();
+            Listener.Stop();
 
-            bool loggedIn = false;
-            string username = "Client";
-          
-            String clientPort = ((IPEndPoint)client.Client.RemoteEndPoint).Port.ToString();
-            Console.WriteLine($"Client Connected on port " + clientPort);
-
-            while (running == true)
-            {
-                try
-                {
-                    // Test client connection.
-                    //MsgClient("&test&", client, stream);
-                    //new ManualResetEvent(false).WaitOne(1000);
-
-                    // Creates bytes array to store incoming message.
-                    byte[] msgBytes = new byte[1024];
-
-                    // Creates Stringbuilder to store converted byte array.
-                    StringBuilder msg = new StringBuilder();
-
-                    // Keeps track of number of bytes in byte array.
-                    int numBytes = 0;
-
-                    do
-                    {
-                        // Sets number of bytes.
-                        numBytes = stream.Read(msgBytes, 0, msgBytes.Length);
-
-                        // Converts byte array into String. 
-                        msg.AppendFormat($"{Encoding.ASCII.GetString(msgBytes, 0, numBytes)}");
-                    }
-                    while (stream.DataAvailable);
-
-                    // Decrypts json string.
-                    string json = Encrypt.DecryptString(msg.ToString(), "ppb");
-
-                    // Deserialize json into ServerCommand object. 
-                    ServerCommand cmd = JsonConvert.DeserializeObject<ServerCommand>(json);
-
-                    if(cmd.Command == "login")
-                    {
-                        // Creates User object.
-                        User user = new User();
-
-                        // Converts parameters dictionary back to a User object.
-                        user = DictionaryObjectConverter.ToObject<User>(cmd.Parameters);
-
-                        // Creates instance of LoginUser class. 
-                        LoginUser login = new LoginUser();
-
-                        // Creates a command to tell the client login was successful. 
-                        ServerCommand clientCmd = new ServerCommand();
-
-                        // Creates dictionary to store parameters. 
-                        var dictionary = new Dictionary<string, object>();
-
-                        // Checks if loginAttempts dictionary doesn't contain entered username. 
-                        if(!loginAttempts.ContainsKey(user.Username))
-                        {
-                            // Adds username to dictionary so login attemps can be tracked. 
-                            loginAttempts.Add(user.Username, 0);
-                        }
-
-                        // Checks if login was successful and user has doesn't have too many login attempts. 
-                        if(login.Login(user) && loginAttempts[user.Username] < 3 )
-                        {
-                            // If an entry exists it is deleted. 
-                            loginAttempts.Remove(user.Username);
-
-                            // Sets logged in username. 
-                            username = user.Username;
-
-                            clientCmd.Command = "login_success";
-
-                            Console.WriteLine($"{username}: Login Successful");
-
-                            SendToClient(clientCmd, client, stream);
-
-                            loggedIn = true;
-
-                        }  
-                        
-                        else
-                        {
-                            Console.WriteLine($"{user.Username}: Login failed");
-
-                            // Increases number of failed login attempts. 
-                            loginAttempts[user.Username]++;
-
-                            // Adds number of login attempts to parameters so the user can be warned. 
-                            dictionary.Add("login_attempts", loginAttempts[user.Username]);
-
-                            // Command 
-                            clientCmd.Command = "login_failed";
-                            clientCmd.Parameters = dictionary;
-
-                            SendToClient(clientCmd, client, stream);
-
-                            loggedIn = false;
-
-                        }
-                    }
-                }  
-                catch(Exception ex)
-                {
-                    //Console.WriteLine(ex);
-                }
-            }                                        
-        }
-
-        private bool SendToClient(ServerCommand command, TcpClient client, NetworkStream stream)
-        {
-            // Serializes the command object into a json object. 
-            string json = JsonConvert.SerializeObject(command);
-
-            // Encrypts the json string. 
-            string encryptedJson = Encrypt.EncryptString(json, "ppb");
-
-            // Encodes json string into a sequence of bytes.
-            Byte[] data = Encoding.ASCII.GetBytes(encryptedJson);
-
-            try
-            {
-                // Sends message to server .
-                stream.Write(data, 0, data.Length);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        private void ListClients()
-        {
-
-        }
-
-        private void StopServer()
-        {
-            server.Stop();
-            running = false;
+            Running = false;
 
             Console.WriteLine("Server Stopped");
         }
 
-        private void Exit()
+        // Switches debug messages on and off. 
+        private static void SwitchDebug()
+        {
+            if (Debug)
+            {
+                Debug = false;
+                Console.WriteLine("Debugging Disabled");
+            }
+            else
+            {
+                Debug = true;
+                Console.WriteLine("Debugging Enabled");
+            }
+        }
+
+        // Lists server commands for user.
+        private static void Help()
+        {
+            Console.WriteLine("Commands:");
+            Console.WriteLine("STARTSERVER - Starts PPB server.");
+            Console.WriteLine("STOPSERVER - Stops PPB server");
+            Console.WriteLine("DEBUG - Enables debug messages.");
+            Console.WriteLine("EXIT - Closes application.");
+        }
+
+        // Closes application. 
+        private static void Exit()
         {
             Environment.Exit(0);
         }
