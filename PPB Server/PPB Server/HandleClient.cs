@@ -158,17 +158,18 @@ namespace PPB_Server
                                 loggedIn = false;
                             }                  
                         }
-                    }
 
-                    // Placeholder for other command methods.
-                    else if(1 == 3)
-                    {
-
+                        // Placeholder for other command methods.
+                        else if (cmd.Command == "idle_logout")
+                        {
+                            Logger logger = new Logger();
+                            logger.Idle(username);
+                        }
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex);
+                    //Console.WriteLine(ex);
                     Console.WriteLine($"{clientPort}: Client disconnected");
                     clientConnected = false;
                 }

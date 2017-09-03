@@ -2,6 +2,7 @@
 using System.Windows;
 using PPB_Client.Helpers;
 using PPB_Client.Views;
+using System.Windows.Threading;
 
 namespace PPB_Client
 {
@@ -18,6 +19,7 @@ namespace PPB_Client
 
             // Subscribes to the ChangeView event in CurrentView class which allows the main view to be changed from anywhere in the program. 
             CurrentView.ViewChanged += ChangeView;
+
         }
 
         // New views can be added here and changed from the current view class. 

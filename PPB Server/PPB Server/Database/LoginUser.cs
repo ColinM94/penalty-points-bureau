@@ -56,6 +56,8 @@ namespace PPB_Server.Database
                     hashedPass += String.Format("{0:x2}", x);
                 }
 
+                Console.WriteLine(hashedPass);
+
                 if (Server.Debug)
                 {
                     Console.WriteLine($"Searching DB for Username: \"{username}\" and Password: \"{hashedPass}\"");

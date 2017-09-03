@@ -16,7 +16,7 @@ namespace PPB_Server.Helpers
 
             try
             {
-                using (StreamWriter file = new StreamWriter($"logs\\Locked Accounts {DateTime.Now.ToString("yyyyMMddhhmm")}.txt", true))
+                using (StreamWriter file = new StreamWriter($"logs\\Locked Accounts {DateTime.Now.ToString("yyyyMMdd")}.txt", true))
                 {
                     file.WriteLine(line);
                 }
@@ -43,6 +43,25 @@ namespace PPB_Server.Helpers
                     Console.WriteLine(ex);
                 }
             }          
+        }
+
+        public void Idle(string username)
+        {
+            try
+            {
+                string line = $"Username: {username} 15 minute idle logout on {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}.";
+                using (StreamWriter file = new StreamWriter($"logs\\idlelog.txt", true))
+                {
+                    file.WriteLine(line);
+                }
+            }
+            catch (Exception ex)
+            {
+                if (Server.Debug)
+                {
+                    Console.WriteLine(ex);
+                }
+            }
         }
     }
 }
