@@ -1,95 +1,105 @@
-﻿using System.Windows;
-using PPB_Client.Helpers;
+﻿using System;
+using System.Security;
+using System.Windows.Threading;
 using System.Windows.Input;
-using System.Diagnostics;
+using System.Windows;
+using PPB_Client.Helpers;
+using PPB_Client.Connection;
 
 namespace PPB_Client.ViewModels
 {
-    /// <summary>
-    /// Logic for login view.
-    /// </summary>
+    // Logic for Login.
     public class LoginViewModel : BaseViewModel
-    {   
-        /// <summary>
-        /// Default constructor.
-        /// </summary>
+    {
+        // Events
+        private void OnLoginSuccess(object source, EventArgs e)
+        {
+            // Allows CurrentView.View to be changed from a non UI thread. 
+            Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => CurrentView.View = "HomeView"));        
+        }
+
+        private void OnLoginFailure(object source, EventArgs e)
+        {
+            LoginMsg = source.ToString();
+        }
+
+        private void OnServerConnected(object source, EventArgs e)
+        {
+            
+        }
+
+        // Constructor.
         public LoginViewModel()
         {
-            // Sets up login command
+            // Sets field to default text. Password does no
+            CurrentUsername = "Username";
+
+            // Sets up login command.
             LoginCommand = new RelayCommand(Login);
+
+            // Subscribes to login events in Server class 
+            Server.LoginSuccess += OnLoginSuccess;
+            Server.LoginFailure += OnLoginFailure;
+            Server.ServerConnected += OnServerConnected;
+
         }
 
-        /// <summary>
-        /// Keeps track of number of login attempts
-        /// </summary>
-        private int loginAttempts = 0;
+        // Login command which will be triggered from the UI. 
+        public ICommand LoginCommand { get; private set; }
 
-        private string username;
-        /// <summary>
-        /// Gets and sets login username
-        /// </summary>
-        public string Username
+        // Current username submitted by user.
+        public string CurrentUsername { get; set; }
+
+        // Current username submitted by user.
+        public string CurrentPassword { get; set; }
+
+        // Login error message displayed on login view. 
+        private string loginMsg;
+        public string LoginMsg
         {
             get
             {
-                return username;
-            }
-
-            set
-            {
-                username = value;
-                OnPropertyChanged();
-            }
-        }
-
-        private string password;
-        /// <summary>
-        /// Gets and sets login password
-        /// </summary>
-        public string Password
-        {
-            get
-            {
-                return password;
+                return loginMsg;
             }
             set
             {
-                password = value;
+                loginMsg = value;
                 OnPropertyChanged();
             }
         }
-
-        /// <summary>
-        /// Login command property
-        /// </summary>
-        public ICommand LoginCommand
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
-        /// Attempts to log in user. 
-        /// </summary>
-        /// <param name="parameter"></param>
+                         
+        // Attempts to log in current user. 
         private void Login(object parameter)
         {
-            var passwordContainer = parameter as IPassword;
-
-            if (passwordContainer != null)
+            // Displays message if there is no server connection. 
+            if (!Server.Connected)
             {
-                var secureString = passwordContainer.Password;
-                Password = SecureStringToString.Convert(secureString);
+                LoginMsg = "Server connection failed!";
+                return;
             }
 
-            if(username == "username" && password == "password")
-                MessageBox.Show("Logged in successfully");
+            // Extracts entered password from password container.
+            var passwordContainer = parameter as IPassword;
 
-            loginAttempts++;
+            if(passwordContainer != null)
+            {
+                string password = SecureStringToString.Convert(passwordContainer.Password);
 
-            if (loginAttempts > 2)
-                MessageBox.Show("Account locked");
+                if (CurrentUsername.ToLower() == "username" || CurrentUsername.Length == 0 )
+                {
+                    LoginMsg = "Username field empty!";
+                }
 
+                else if (password.Contains("****") || password.Length == 0 || password == null)
+                {
+                    LoginMsg = "Password field empty!";
+                }
+
+                else
+                {
+                    Server.Login(CurrentUsername, password);
+                }
+            }
         }
     }
 }

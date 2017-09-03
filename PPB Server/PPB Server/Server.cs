@@ -1,152 +1,166 @@
 ﻿using System;
-using System.IO;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
+using PPB_Server.Database;
+using PPB_Server.Helpers;
 
 namespace PPB_Server
 {
-    class Server
+    public static class Server
     {
         static void Main(string[] args)
         {
+            Menu();
+        }
+
+        /// <summary>
+        /// Server IP address.
+        /// </summary>
+        public static IPAddress IP = IPAddress.Parse("127.0.0.1");
+
+        /// <summary>
+        /// Server Port.
+        /// </summary>
+        public static int Port = 2000;
+
+        /// <summary>
+        /// Listens for connections from TCP network clients.
+        /// </summary>
+        public static TcpListener Listener;
+
+        /// <summary>
+        /// Keeps track of whether server is running or not. 
+        /// </summary>
+        public static bool Running = false;
+
+        /// <summary>
+        /// Stores number of login attempts for user.
+        /// </summary>
+        public static Dictionary<string, int> LoginAttempts = new Dictionary<string, int>();
+
+        /// <summary>
+        /// If set to true then debug information will be displayed in the console. 
+        /// </summary>
+        public static bool Debug = false;
+
+        /// <summary>
+        /// Opens server command menu. 
+        /// </summary>
+        public static void Menu()
+        {
+            SwitchDebug();
+            StartServer();
+
             Console.WriteLine("Penalty Points Bureau Server");
             Console.WriteLine("Type \"HELP\" for list of commands\n");
-
-            ServerConsole server = new ServerConsole();
-            server.menu();
-        }
-    }
-
-    class ServerConsole
-    {
-        IPAddress ip = IPAddress.Parse("127.0.0.1");
-        int port = 2000;
-        TcpListener server;
-        static bool running = false;
-
-        public void menu()
-        {
-            StartServer();
 
             bool exit = false;
 
             while (exit == false)
             {
                 String option = Console.ReadLine().ToUpper();
-                
+
                 switch (option)
                 {
                     case "STARTSERVER":
-                            StartServer();
+                        StartServer();
                         break;
                     case "STOPSERVER":
-                            StopServer();
+                        StopServer();
                         break;
-                    case "EXIT":
-                            Exit();
+                    case "DEBUG":
+                        SwitchDebug();
                         break;
                     case "HELP":
-                        Console.WriteLine("Commands:");
-                        Console.WriteLine("STARTSERVER");
-                        Console.WriteLine("STOPSERVER");
-                        Console.WriteLine("EXIT");
-
+                        Help();
+                        break;
+                    case "EXIT":
+                        Exit();
                         break;
                     default:
-                        Console.WriteLine("Uknown Command");
+                        Console.WriteLine("Unknown Command");
                         break;
                 }
-            }          
+            }
         }
 
-        //Listens for incoming connections
-        private void StartServer()
+        // Starts PPB server.
+        private static void StartServer()
+        {            
+            // Listens for clients on a separate thread.  
+            Thread listenThread = new Thread(Listen);
+            listenThread.Start();
+        }
+
+        // Deals with new client connections.
+        private static void Listen()
         {
-            running = true;
+            Running = true;
 
-            //Instiates and starts Listener server
-            server = new TcpListener(ip, port);
-            server.Start();
+            // Starts Listener server.
+            Listener = new TcpListener(IP, Port);
+            Listener.Start();
 
-            Console.WriteLine("Server Started on Port " + port + " with IP " + ip);
+            Console.WriteLine("Server Started on Port " + Port + " with IP " + IP);
             Console.WriteLine("Awaiting Connections....");
 
-            //Thread waits for a client to connect
-            Thread listenThread = new Thread(delegate ()
-            {       
-                while (running == true)
-                {
-                    TcpClient newClient = server.AcceptTcpClient();
-
-                    //Connected client is handed off to an instance of clientThread to free up listenThread
-                    Thread clientThread = new Thread(delegate ()
-                    {               
-                        HandleClient(newClient);
-                        newClient.Close();
-                    });
-                    clientThread.IsBackground = true;
-                    clientThread.Start();
-                }
-            });
-            listenThread.IsBackground = true;
-            listenThread.Start();  
-        }
-
-        //Deals with a single client
-        private void HandleClient(object newClient)
-        {
-            TcpClient client = (TcpClient)newClient;
-            NetworkStream stream = client.GetStream();
-
-            String clientPort = ((IPEndPoint)client.Client.RemoteEndPoint).Port.ToString();
-            Console.WriteLine("Client Connected on port " + clientPort);
-
-            try
+            while (Running == true)
             {
-                while(running == true)
-                {
-                    MsgClient("testconn", client, stream);
+                // Waits for a new client. 
+                TcpClient newClient = Listener.AcceptTcpClient();
 
-                    byte[] msgBytes = new byte[1024];
-                    StringBuilder msg = new StringBuilder();
-                    int numBytes = 0;
+                // Creates instance of HandleClient class. 
+                var handleClient = new HandleClient();
 
-                    do
-                    {
-                        numBytes = stream.Read(msgBytes, 0, msgBytes.Length);
-                        msg.AppendFormat("{0}", Encoding.ASCII.GetString(msgBytes, 0, numBytes));
-                    }
-                    while (stream.DataAvailable);
-
-                    Console.WriteLine(msg + " " + clientPort);                 
-                }
+                // New client is handed off to a HandleClient thread. 
+                Thread clientThread = new Thread(() => handleClient.Handle(newClient));
+                clientThread.Start();
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Client Disconnected");       
-            }
-
-            client.Close();
         }
-
-        private void MsgClient(string msg, TcpClient client, NetworkStream stream)
+      
+        // Stops PPB server.
+        private static void StopServer()
         {
-            Byte[] data = System.Text.Encoding.ASCII.GetBytes("Ping");
+            Listener.Stop();
 
-            stream.Write(data, 0, data.Length);    
-        }
-
-        private void StopServer()
-        {
-            server.Stop();
-            running = false;
+            Running = false;
 
             Console.WriteLine("Server Stopped");
         }
 
-        private void Exit()
+        // Switches debug messages on and off. 
+        private static void SwitchDebug()
+        {
+            if (Debug)
+            {
+                Debug = false;
+                Console.WriteLine("Debugging Disabled");
+            }
+            else
+            {
+                Debug = true;
+                Console.WriteLine("Debugging Enabled");
+            }
+        }
+
+        // Lists server commands for user.
+        private static void Help()
+        {
+            Console.WriteLine("Commands:");
+            Console.WriteLine("STARTSERVER - Starts PPB server.");
+            Console.WriteLine("STOPSERVER - Stops PPB server");
+            Console.WriteLine("DEBUG - Enables debug messages.");
+            Console.WriteLine("EXIT - Closes application.");
+        }
+
+        // Closes application. 
+        private static void Exit()
         {
             Environment.Exit(0);
         }

@@ -1,7 +1,7 @@
 ﻿using System.Security;
 
 namespace PPB_Client.Helpers
-{
+{ 
     /// <summary>
     /// Secure password interface.
     /// </summary>

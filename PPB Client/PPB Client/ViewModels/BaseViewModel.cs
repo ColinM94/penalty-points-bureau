@@ -1,25 +1,20 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Windows;
 
 namespace PPB_Client.ViewModels
 {
     /// <summary>
-    /// Base class for all ViewModels
+    /// Base class for all view models. Implements INotifyPropertyChanged which allows the UI to be notified of property changes.
     /// </summary>
-    public class BaseViewModel : INotifyPropertyChanged
+    public abstract class BaseViewModel : INotifyPropertyChanged
     {
-        /// <summary>
-        /// Occurs when a property value changes.
-        /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
 
         /// <summary>
-        /// 
+        /// Notifies the UI that this property needs to be updated. 
         /// </summary>
-        /// <param name="propertyName">Name of property which called the function</param>
-        public void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        /// <param name="propertyName">Property which has been updated.</param>
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }

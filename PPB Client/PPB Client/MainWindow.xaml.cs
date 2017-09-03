@@ -1,6 +1,8 @@
-﻿using PPB_Client.ViewModels;
-using PPB_Client.Views;
+﻿using System;
 using System.Windows;
+using PPB_Client.Helpers;
+using PPB_Client.Views;
+using System.Windows.Threading;
 
 namespace PPB_Client
 {
@@ -11,9 +13,23 @@ namespace PPB_Client
     {
         public MainWindow()
         {
-            InitializeComponent();
-            ActiveItem.Content = new LoginView();
-            //DataContext = new LoginViewModel();
+            InitializeComponent();          
+            Status.Content = new StatusView();
+            Main.Content = new LoginView();
+
+            // Subscribes to the ChangeView event in CurrentView class which allows the main view to be changed from anywhere in the program. 
+            CurrentView.ViewChanged += ChangeView;
+
+        }
+
+        // New views can be added here and changed from the current view class. 
+        private void ChangeView(object source, string view)
+        {
+            if(view.Contains("LoginView"))
+                Main.Content = new LoginView();
+
+            if (view.Contains("HomeView"))
+                Main.Content = new HomeView();
         }
     }
 }

@@ -5,18 +5,21 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:vm="clr-namespace:PPB_Client.ViewModels"
-             xmlns:h="clr-namespace:PPB_Client.Helpers"
              xmlns:local="clr-namespace:PPB_Client.Views"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
-
-    <StackPanel Height="200" Width="250" VerticalAlignment="Center" HorizontalAlignment="Center">
-        <TextBox Name="UsernameTxtBox" Text="{Binding Username, Mode=OneWayToSource}" Margin="15 15 15 0" Padding="5" 
+    <UserControl.DataContext>
+        <vm:LoginViewModel/>
+    </UserControl.DataContext>
+    <StackPanel Height="210" Width="275">
+        <TextBox Name="UsernameTxtBox" Text="{Binding CurrentUsername, UpdateSourceTrigger=PropertyChanged}" Padding="5" 
             FontSize="20" Background="White" BorderBrush="#FF3498DB" Foreground="#FF939393" GotFocus="UsernameTxtBox_GotFocus" LostFocus="UsernameTxtBox_LostFocus" />
-        
-        <PasswordBox Name="PasswordBox"  Margin="15 10 15 0" Padding="5" FontSize="20" Background="White"  BorderBrush="#FF3498DB" 
-            Foreground="#FF939393" PasswordChar="*"  GotFocus="PasswordBox_GotFocus" LostFocus="PasswordBox_LostFocus"/>
 
-        <Button Name="LoginBtn" Command="{Binding LoginCommand}" CommandParameter="{Binding ElementName=This}" IsDefault="True" Margin="15 15 15 0" Height="45" Content="Login" FontSize="24" Background="#FF3498DB" Foreground="White" BorderThickness="0"/>
+        <PasswordBox Name="PasswordBox" Margin="0 10 0 0" Padding="5" FontSize="20" Background="White"  BorderBrush="#FF3498DB" 
+            Foreground="#FF939393" PasswordChar="*" GotFocus="PasswordBox_GotFocus" LostFocus="PasswordBox_LostFocus"/>
+
+        <Button Name="LoginBtn" Command="{Binding LoginCommand}" CommandParameter="{Binding ElementName=This}" IsDefault="True" Margin="0 15 0 0" Height="45" Content="Login" FontSize="24" Background="#FF3498DB" Foreground="White" BorderThickness="0"/>
+        <TextBlock Text="{Binding LoginMsg}" Margin="0 10 0 0" Foreground="Red" FontSize="17" HorizontalAlignment="Center" TextWrapping="Wrap"/>
     </StackPanel>
 </UserControl>
+

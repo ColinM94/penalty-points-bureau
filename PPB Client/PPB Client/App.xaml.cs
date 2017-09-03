@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 
 namespace PPB_Client
@@ -13,5 +8,10 @@ namespace PPB_Client
     /// </summary>
     public partial class App : Application
     {
+        // Code runs on program shutdown. 
+        private void Application_Exit(object sender, ExitEventArgs e)
+        {
+            Environment.Exit(0);
+        }
     }
 }
