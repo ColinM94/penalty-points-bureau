@@ -54,9 +54,6 @@ namespace PPB_Server
         /// </summary>
         public static void Menu()
         {
-            SwitchDebug();
-            StartServer();
-
             Console.WriteLine("Penalty Points Bureau Server");
             Console.WriteLine("Type \"HELP\" for list of commands\n");
 
